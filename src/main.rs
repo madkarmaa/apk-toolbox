@@ -1,3 +1,5 @@
+mod config;
+
 fn main() {
-    println!("Hello, world!");
+    println!("{}", config::CONFIG_FILE_NAME);
 }

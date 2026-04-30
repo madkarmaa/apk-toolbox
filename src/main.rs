@@ -1,5 +1,5 @@
 mod config;
 
 fn main() {
-    println!("{}", config::CONFIG_FILE_NAME);
+    println!("{}", config::ConfigKey::JavaPath.as_ref());
 }

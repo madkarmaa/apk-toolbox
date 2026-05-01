@@ -1,4 +1,8 @@
 [package]
 name = "apk-toolbox"
+description = "Compile and decompile APK files with ease, no need to remember complex commands."
 version = "0.0.1"
 edition = "2024"
+
+[dependencies]
+clap = { version = "4.6.1", features = ["derive"] }

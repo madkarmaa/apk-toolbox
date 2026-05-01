@@ -1,11 +1,32 @@
 use std::collections::HashMap;
+use std::env;
 use std::fmt;
-use std::fs::{File, rename, write};
+use std::fs;
+use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 use std::sync::{OnceLock, RwLock};
 
 pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
+
+fn get_config_file_path() -> String {
+    let mut path: PathBuf;
+
+    if cfg!(debug_assertions) {
+        path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    } else {
+        path = env::current_exe()
+            .unwrap_or_else(|_| PathBuf::from("."))
+            .to_path_buf();
+
+        path.pop();
+    }
+
+    path.push(CONFIG_FILE_NAME);
+    path.to_string_lossy().to_string()
+}
+
 static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
 pub enum Config {
@@ -42,7 +63,7 @@ impl fmt::Display for Config {
 
 impl Config {
     fn read_config_file() -> io::Result<HashMap<String, String>> {
-        let file = File::open(CONFIG_FILE_NAME)?;
+        let file = File::open(get_config_file_path())?;
         let reader = BufReader::new(file);
         let mut config = HashMap::new();
 
@@ -94,9 +115,9 @@ impl Config {
             .collect::<Vec<String>>()
             .join("\n");
 
-        let tmp = format!("{}.tmp", CONFIG_FILE_NAME);
-        write(&tmp, contents)?;
-        rename(&tmp, CONFIG_FILE_NAME)?;
+        let tmp = format!("{}.tmp", get_config_file_path());
+        fs::write(&tmp, contents)?;
+        fs::rename(&tmp, get_config_file_path())?;
 
         Ok(())
     }

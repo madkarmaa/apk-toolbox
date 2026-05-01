@@ -10,21 +10,18 @@ use std::sync::{OnceLock, RwLock};
 
 pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
 
-fn get_config_file_path() -> String {
+fn get_config_file_path() -> PathBuf {
     let mut path: PathBuf;
 
     if cfg!(debug_assertions) {
         path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     } else {
-        path = env::current_exe()
-            .unwrap_or_else(|_| PathBuf::from("."))
-            .to_path_buf();
-
+        path = env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
         path.pop();
     }
 
     path.push(CONFIG_FILE_NAME);
-    path.to_string_lossy().to_string()
+    path
 }
 
 static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
@@ -107,6 +104,9 @@ impl Config {
     }
 
     fn flush() -> io::Result<()> {
+        let config_path = get_config_file_path();
+        let tmp = config_path.with_extension("tmp");
+
         let contents = Self::cache()
             .read()
             .unwrap()
@@ -115,10 +115,8 @@ impl Config {
             .collect::<Vec<String>>()
             .join("\n");
 
-        let tmp = format!("{}.tmp", get_config_file_path());
         fs::write(&tmp, contents)?;
-        fs::rename(&tmp, get_config_file_path())?;
-
+        fs::rename(&tmp, config_path)?;
         Ok(())
     }
 }

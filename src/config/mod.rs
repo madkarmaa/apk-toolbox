@@ -1,8 +1,12 @@
+use std::collections::HashMap;
 use std::fmt;
-use std::fs::{File, write};
-use std::io::{BufRead, BufReader, Result};
+use std::fs::{File, rename, write};
+use std::io;
+use std::io::{BufRead, BufReader};
+use std::sync::{OnceLock, RwLock};
 
 pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
+static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
 pub enum Config {
     JavaPath,
@@ -13,22 +17,6 @@ pub enum Config {
     KeystorePath,
     KeystoreAlias,
     KeystorePassword,
-}
-
-impl fmt::Display for Config {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let key_value = match self {
-            Config::JavaPath => "java.path",
-            Config::ApktoolPath => "apktool.path",
-            Config::ApkeditorPath => "apkeditor.path",
-            Config::ApksignerPath => "apksigner.path",
-            Config::ZipalignPath => "zipalign.path",
-            Config::KeystorePath => "keystore.path",
-            Config::KeystoreAlias => "keystore.alias",
-            Config::KeystorePassword => "keystore.password",
-        };
-        write!(formatter, "{key_value}")
-    }
 }
 
 impl AsRef<str> for Config {
@@ -46,64 +34,70 @@ impl AsRef<str> for Config {
     }
 }
 
+impl fmt::Display for Config {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "{}", self.as_ref())
+    }
+}
+
 impl Config {
-    fn read_config_file() -> Result<Vec<(String, String)>> {
+    fn read_config_file() -> io::Result<HashMap<String, String>> {
         let file = File::open(CONFIG_FILE_NAME)?;
         let reader = BufReader::new(file);
-        let mut config = Vec::new();
+        let mut config = HashMap::new();
 
         for line_res in reader.lines() {
             let line = line_res?;
             if let Some((key, value)) = line.split_once('=') {
-                config.push((key.trim().to_string(), value.trim().to_string()));
+                config.insert(key.trim().to_string(), value.trim().to_string());
             }
         }
 
         Ok(config)
     }
 
+    fn cache() -> &'static RwLock<HashMap<String, String>> {
+        CONFIG_CACHE.get_or_init(|| {
+            let map = Self::read_config_file()
+                .unwrap_or_default()
+                .into_iter()
+                .collect();
+
+            RwLock::new(map)
+        })
+    }
+
     pub fn get(&self) -> Option<String> {
-        let config = Self::read_config_file().unwrap_or_else(|_| Vec::new());
-        let key_str = self.as_ref();
-
-        config
-            .into_iter()
-            .find_map(|(k, v)| (k == key_str).then_some(v))
+        Self::cache().read().unwrap().get(self.as_ref()).cloned()
     }
 
-    pub fn set(&self, value: &str) -> Result<()> {
-        let mut config = Self::read_config_file().unwrap_or_else(|_| Vec::new());
-        let key_str = self.as_ref();
+    pub fn set(&self, value: &str) -> io::Result<()> {
+        Self::cache()
+            .write()
+            .unwrap()
+            .insert(self.to_string(), value.to_string());
 
-        if let Some((_, v)) = config.iter_mut().find(|(k, _)| k == key_str) {
-            *v = value.to_string();
-        } else {
-            config.push((key_str.to_string(), value.to_string()));
-        }
-
-        write(
-            CONFIG_FILE_NAME,
-            config
-                .into_iter()
-                .map(|(k, v)| format!("{}={}", k, v))
-                .collect::<Vec<String>>()
-                .join("\n"),
-        )
+        Self::flush()
     }
 
-    pub fn delete(&self) -> Result<()> {
-        let mut config = Self::read_config_file().unwrap_or_else(|_| Vec::new());
-        let key_str = self.as_ref();
+    pub fn delete(&self) -> io::Result<()> {
+        Self::cache().write().unwrap().remove(self.as_ref());
+        Self::flush()
+    }
 
-        config.retain(|(k, _)| k != key_str);
+    fn flush() -> io::Result<()> {
+        let contents = Self::cache()
+            .read()
+            .unwrap()
+            .iter()
+            .map(|(config_key, value)| format!("{}={}", config_key, value))
+            .collect::<Vec<String>>()
+            .join("\n");
 
-        write(
-            CONFIG_FILE_NAME,
-            config
-                .into_iter()
-                .map(|(k, v)| format!("{}={}", k, v))
-                .collect::<Vec<String>>()
-                .join("\n"),
-        )
+        let tmp = format!("{}.tmp", CONFIG_FILE_NAME);
+        write(&tmp, contents)?;
+        rename(&tmp, CONFIG_FILE_NAME)?;
+
+        Ok(())
     }
 }

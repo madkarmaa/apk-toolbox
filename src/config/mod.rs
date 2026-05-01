@@ -1,31 +1,27 @@
+use crate::utils::root_dir;
 use std::collections::HashMap;
 use std::env;
 use std::fmt;
+use std::fmt::Debug;
 use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::{OnceLock, RwLock};
 
 pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
 
-fn get_config_file_path() -> PathBuf {
-    let mut path: PathBuf;
-
-    if cfg!(debug_assertions) {
-        path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    } else {
-        path = env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
-        path.pop();
-    }
-
-    path.push(CONFIG_FILE_NAME);
-    path
+fn config_file_path() -> PathBuf {
+    let mut root = root_dir();
+    root.push(CONFIG_FILE_NAME);
+    root
 }
 
 static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
+#[derive(Debug, Clone)]
 pub enum Config {
     JavaPath,
     ApktoolPath,
@@ -35,6 +31,25 @@ pub enum Config {
     KeystorePath,
     KeystoreAlias,
     KeystorePassword,
+}
+
+impl FromStr for Config {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "java.path" => Ok(Config::JavaPath),
+            "apktool.path" => Ok(Config::ApktoolPath),
+            "apkeditor.path" => Ok(Config::ApkeditorPath),
+            "apksigner.path" => Ok(Config::ApksignerPath),
+            "zipalign.path" => Ok(Config::ZipalignPath),
+            "keystore.path" => Ok(Config::KeystorePath),
+            "keystore.alias" => Ok(Config::KeystoreAlias),
+            "keystore.password" => Ok(Config::KeystorePassword),
+
+            _ => Err(format!("Invalid configuration key '{}'.", value)),
+        }
+    }
 }
 
 impl AsRef<str> for Config {
@@ -60,7 +75,7 @@ impl fmt::Display for Config {
 
 impl Config {
     fn read_config_file() -> io::Result<HashMap<String, String>> {
-        let file = File::open(get_config_file_path())?;
+        let file = File::open(config_file_path())?;
         let reader = BufReader::new(file);
         let mut config = HashMap::new();
 
@@ -104,7 +119,7 @@ impl Config {
     }
 
     fn flush() -> io::Result<()> {
-        let config_path = get_config_file_path();
+        let config_path = config_file_path();
         let tmp = config_path.with_extension("tmp");
 
         let contents = Self::cache()

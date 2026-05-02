@@ -1,28 +1,50 @@
+mod cli;
 mod config;
+mod utils;
+
+use clap::Parser;
+use cli::{Cli, executors};
+use std::process;
 
 fn main() {
-    match config::Config::JavaPath.get() {
-        Some(value) => println!("Java Path: {value}"),
-        None => println!("Java Path not found in config file."),
-    }
+    let cli = Cli::parse();
 
-    match config::Config::JavaPath.set("C:\\Program Files\\Java\\jdk-17.0.1\\bin\\java.exe") {
-        Ok(_) => println!("Java Path updated successfully."),
-        Err(e) => println!("Failed to update Java Path: {e}"),
-    }
+    match cli.command {
+        cli::Commands::Compile { input, out_dir } => {
+            println!("Compiling {:?} to {:?}", input, out_dir);
+        }
 
-    match config::Config::JavaPath.get() {
-        Some(value) => println!("Java Path: {value}"),
-        None => println!("Java Path not found in config file."),
-    }
+        cli::Commands::Decompile { input, out_dir } => {
+            println!("Decompiling {:?} to {:?}", input, out_dir);
+        }
 
-    match config::Config::JavaPath.delete() {
-        Ok(_) => println!("Java Path deleted successfully."),
-        Err(e) => println!("Failed to delete Java Path: {e}"),
-    }
+        cli::Commands::Keygen => match executors::keygen() {
+            Ok(()) => println!("Keystore generated successfully."),
+            Err(err) => {
+                eprintln!("Error generating keystore: {}", err);
+                process::exit(1);
+            }
+        },
 
-    match config::Config::JavaPath.get() {
-        Some(value) => println!("Java Path: {value}"),
-        None => println!("Java Path not found in config file."),
+        cli::Commands::Config { action } => match action {
+            cli::ConfigAction::Get { key } => {
+                let value = key.get().expect("Config key should be defined");
+                println!("{}", value);
+            }
+
+            cli::ConfigAction::Set { key, value } => {
+                if let Err(err) = key.set(&value) {
+                    eprintln!("Error setting config value: {}", err);
+                    process::exit(1);
+                }
+            }
+
+            cli::ConfigAction::Delete { key } => {
+                if let Err(err) = key.delete() {
+                    eprintln!("Error deleting config key: {}", err);
+                    process::exit(1);
+                }
+            }
+        },
     }
 }

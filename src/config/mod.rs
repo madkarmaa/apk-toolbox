@@ -15,9 +15,7 @@ pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
 static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
 fn config_file_path() -> PathBuf {
-    let mut root = root_dir();
-    root.push(CONFIG_FILE_NAME);
-    root
+    root_dir().join(CONFIG_FILE_NAME)
 }
 
 #[derive(AsRefStr, Display, EnumString, Debug, Clone, ValueEnum)]
@@ -83,20 +81,42 @@ impl Config {
     }
 
     pub fn get(&self) -> Option<String> {
-        Self::cache().read().unwrap().get(self.as_ref()).cloned()
+        let cached_value = Self::cache()
+            .read()
+            .expect("Failed to read from config cache")
+            .get(self.as_ref())
+            .cloned();
+
+        if cached_value.is_some() {
+            return cached_value;
+        }
+
+        // default values for certain keys
+        match self {
+            Config::KeystorePath => Some(
+                crate::utils::root_dir()
+                    .join("keystore.jks")
+                    .to_string_lossy()
+                    .to_string(),
+            ),
+            _ => None,
+        }
     }
 
     pub fn set(&self, value: &str) -> io::Result<()> {
         Self::cache()
             .write()
-            .unwrap()
+            .expect("Failed to write to config cache")
             .insert(self.to_string(), value.to_string());
 
         Self::save_to_disk()
     }
 
     pub fn delete(&self) -> io::Result<()> {
-        Self::cache().write().unwrap().remove(self.as_ref());
+        Self::cache()
+            .write()
+            .expect("Failed to write to config cache")
+            .remove(self.as_ref());
         Self::save_to_disk()
     }
 
@@ -106,7 +126,7 @@ impl Config {
 
         let contents = Self::cache()
             .read()
-            .unwrap()
+            .expect("Failed to read from config cache")
             .iter()
             .map(|(config_key, value)| format!("{}={}", config_key, value))
             .collect::<Vec<String>>()

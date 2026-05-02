@@ -12,14 +12,13 @@ use std::sync::{OnceLock, RwLock};
 use strum_macros::{AsRefStr, Display, EnumString};
 
 pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
+static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
 fn config_file_path() -> PathBuf {
     let mut root = root_dir();
     root.push(CONFIG_FILE_NAME);
     root
 }
-
-static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
 #[derive(AsRefStr, Display, EnumString, Debug, Clone, ValueEnum)]
 pub enum Config {

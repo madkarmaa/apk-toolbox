@@ -1,15 +1,15 @@
 use crate::utils::root_dir;
+use clap::ValueEnum;
 use std::collections::HashMap;
 use std::env;
-use std::fmt;
 use std::fmt::Debug;
 use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::sync::{OnceLock, RwLock};
+use strum_macros::{AsRefStr, Display, EnumString};
 
 pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
 
@@ -21,56 +21,39 @@ fn config_file_path() -> PathBuf {
 
 static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
 
-#[derive(Debug, Clone)]
+#[derive(AsRefStr, Display, EnumString, Debug, Clone, ValueEnum)]
 pub enum Config {
+    #[strum(serialize = "java.path")]
+    #[clap(name = "java.path")]
     JavaPath,
+
+    #[strum(serialize = "apktool.path")]
+    #[clap(name = "apktool.path")]
     ApktoolPath,
+
+    #[strum(serialize = "apkeditor.path")]
+    #[clap(name = "apkeditor.path")]
     ApkeditorPath,
+
+    #[strum(serialize = "apksigner.path")]
+    #[clap(name = "apksigner.path")]
     ApksignerPath,
+
+    #[strum(serialize = "zipalign.path")]
+    #[clap(name = "zipalign.path")]
     ZipalignPath,
+
+    #[strum(serialize = "keystore.path")]
+    #[clap(name = "keystore.path")]
     KeystorePath,
+
+    #[strum(serialize = "keystore.alias")]
+    #[clap(name = "keystore.alias")]
     KeystoreAlias,
+
+    #[strum(serialize = "keystore.password")]
+    #[clap(name = "keystore.password")]
     KeystorePassword,
-}
-
-impl FromStr for Config {
-    type Err = String;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value {
-            "java.path" => Ok(Config::JavaPath),
-            "apktool.path" => Ok(Config::ApktoolPath),
-            "apkeditor.path" => Ok(Config::ApkeditorPath),
-            "apksigner.path" => Ok(Config::ApksignerPath),
-            "zipalign.path" => Ok(Config::ZipalignPath),
-            "keystore.path" => Ok(Config::KeystorePath),
-            "keystore.alias" => Ok(Config::KeystoreAlias),
-            "keystore.password" => Ok(Config::KeystorePassword),
-
-            _ => Err(format!("Invalid configuration key '{}'.", value)),
-        }
-    }
-}
-
-impl AsRef<str> for Config {
-    fn as_ref(&self) -> &str {
-        match self {
-            Config::JavaPath => "java.path",
-            Config::ApktoolPath => "apktool.path",
-            Config::ApkeditorPath => "apkeditor.path",
-            Config::ApksignerPath => "apksigner.path",
-            Config::ZipalignPath => "zipalign.path",
-            Config::KeystorePath => "keystore.path",
-            Config::KeystoreAlias => "keystore.alias",
-            Config::KeystorePassword => "keystore.password",
-        }
-    }
-}
-
-impl fmt::Display for Config {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "{}", self.as_ref())
-    }
 }
 
 impl Config {

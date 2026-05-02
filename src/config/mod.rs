@@ -93,15 +93,15 @@ impl Config {
             .unwrap()
             .insert(self.to_string(), value.to_string());
 
-        Self::flush()
+        Self::save_to_disk()
     }
 
     pub fn delete(&self) -> io::Result<()> {
         Self::cache().write().unwrap().remove(self.as_ref());
-        Self::flush()
+        Self::save_to_disk()
     }
 
-    fn flush() -> io::Result<()> {
+    fn save_to_disk() -> io::Result<()> {
         let config_path = config_file_path();
         let tmp = config_path.with_extension("tmp");
 

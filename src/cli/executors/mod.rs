@@ -2,19 +2,27 @@ use crate::config::Config;
 use crate::utils;
 use std::path::PathBuf;
 
-pub fn keygen() -> Result<(), String> {
+pub fn keygen(
+    keystore_alias: Option<String>,
+    keystore_password: Option<String>,
+) -> Result<(), String> {
     let keystore_path = Config::KeystorePath
         .get()
         .expect("Keystore path should have a default value");
 
-    let keystore_alias = Config::KeystoreAlias.get().ok_or_else(|| {
-        "Keystore alias not configured. Please configure it using the config command.".to_string()
-    })?;
+    let keystore_alias = keystore_alias
+        .or_else(|| Config::KeystoreAlias.get())
+        .ok_or_else(|| {
+            "Keystore alias not found. Please pass it with the -a flag or configure it using the config command."
+                .to_string()
+        })?;
 
-    let keystore_password = Config::KeystorePassword.get().ok_or_else(|| {
-        "Keystore password not configured. Please configure it using the config command."
-            .to_string()
-    })?;
+    let keystore_password = keystore_password
+        .or_else(|| Config::KeystorePassword.get())
+        .ok_or_else(|| {
+            "Keystore password not found. Please pass it with the -p flag or configure it using the config command."
+                .to_string()
+        })?;
 
     let javabase_path = Config::JavaPath.get().ok_or_else(|| {
         "Java path not configured. Please configure it using the config command.".to_string()

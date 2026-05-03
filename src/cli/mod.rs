@@ -26,6 +26,14 @@ pub enum Commands {
         input: PathBuf,
         /// The output directory for the compiled APK. If not specified, the APK will be created in the current directory.
         out_dir: Option<PathBuf>,
+
+        /// The keystore alias to use.
+        #[arg(short = 'a', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        keystore_alias: Option<String>,
+
+        /// The password for the keystore.
+        #[arg(short = 'p', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        keystore_password: Option<String>,
     },
 
     /// Decompile an APK file into a smali directory.
@@ -37,7 +45,15 @@ pub enum Commands {
     },
 
     /// Generate a keystore file for signing APKs.
-    Keygen,
+    Keygen {
+        /// The keystore alias to use.
+        #[arg(short = 'a', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        keystore_alias: Option<String>,
+
+        /// The password for the keystore.
+        #[arg(short = 'p', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        keystore_password: Option<String>,
+    },
 
     /// Manage configuration settings.
     Config {

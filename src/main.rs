@@ -10,16 +10,20 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        cli::Commands::Compile { input, out_dir } => {
-            println!("Compiling {:?} to {:?}", input, out_dir);
-        }
+        cli::Commands::Compile {
+            input,
+            out_dir,
+            keystore_alias,
+            keystore_password,
+        } => {}
 
-        cli::Commands::Decompile { input, out_dir } => {
-            println!("Decompiling {:?} to {:?}", input, out_dir);
-        }
+        cli::Commands::Decompile { input, out_dir } => {}
 
-        cli::Commands::Keygen => {
-            if let Err(err) = executors::keygen() {
+        cli::Commands::Keygen {
+            keystore_alias,
+            keystore_password,
+        } => {
+            if let Err(err) = executors::keygen(keystore_alias, keystore_password) {
                 eprintln!("{}", err);
                 process::exit(1);
             }

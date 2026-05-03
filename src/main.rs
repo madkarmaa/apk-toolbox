@@ -7,9 +7,9 @@ use cli::{Cli, executors};
 use std::process;
 
 fn main() {
-    let cli = Cli::parse();
+    let args = Cli::parse();
 
-    match cli.command {
+    match args.command {
         cli::Commands::Compile {
             input,
             out_dir,

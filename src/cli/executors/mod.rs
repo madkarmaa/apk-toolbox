@@ -33,7 +33,7 @@ pub fn keygen() -> Result<(), String> {
     println!("Generating keystore...");
 
     utils::execute_blocking(
-        &keytool_path.as_os_str().to_string_lossy(),
+        &keytool_path.to_string_lossy(),
         &[
             "-genkey",
             "-keystore",

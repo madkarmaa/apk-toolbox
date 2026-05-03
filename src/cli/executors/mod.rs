@@ -3,9 +3,9 @@ use crate::utils;
 use std::path::PathBuf;
 
 pub fn keygen() -> Result<(), String> {
-    let keystore_path = Config::KeystorePath.get().ok_or_else(|| {
-        "Keystore path not configured. Please configure it using the config command.".to_string()
-    })?;
+    let keystore_path = Config::KeystorePath
+        .get()
+        .expect("Keystore path should have a default value");
 
     let keystore_alias = Config::KeystoreAlias.get().ok_or_else(|| {
         "Keystore alias not configured. Please configure it using the config command.".to_string()

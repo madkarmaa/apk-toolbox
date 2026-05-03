@@ -1,5 +1,4 @@
 pub mod executors;
-pub mod validators;
 
 use crate::config::Config;
 use clap::{Parser, Subcommand};
@@ -28,11 +27,11 @@ pub enum Commands {
         out_dir: Option<PathBuf>,
 
         /// The keystore alias to use.
-        #[arg(short = 'a', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        #[arg(short = 'a', long)]
         keystore_alias: Option<String>,
 
         /// The password for the keystore.
-        #[arg(short = 'p', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        #[arg(short = 'p', long)]
         keystore_password: Option<String>,
     },
 
@@ -47,11 +46,11 @@ pub enum Commands {
     /// Generate a keystore file for signing APKs.
     Keygen {
         /// The keystore alias to use.
-        #[arg(short = 'a', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        #[arg(short = 'a', long)]
         keystore_alias: Option<String>,
 
         /// The password for the keystore.
-        #[arg(short = 'p', long, value_parser = validators::MinLengthParser{ len: 1 })]
+        #[arg(short = 'p', long)]
         keystore_password: Option<String>,
     },
 
@@ -76,7 +75,6 @@ pub enum ConfigAction {
         key: Config,
 
         /// The value to set for the configuration key.
-        #[arg(value_parser = validators::MinLengthParser{ len: 1 })]
         value: String,
     },
 

@@ -58,8 +58,9 @@ pub enum ConfigAction {
     Set {
         /// The configuration key to set.
         key: Config,
+
         /// The value to set for the configuration key.
-        #[arg(value_parser = validators::MinLengthParser{ len: 6 })]
+        #[arg(value_parser = validators::MinLengthParser{ len: 1 })]
         value: String,
     },
 

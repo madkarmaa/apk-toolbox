@@ -1,5 +1,9 @@
 use crate::config::Config;
 use crate::utils;
+use std::fs::File;
+
+// TODO: handle keystore file already exists
+// TODO: force user to set keytool path
 
 pub fn keygen() -> Result<(), String> {
     println!("Generating keystore...");

@@ -18,13 +18,12 @@ fn main() {
             println!("Decompiling {:?} to {:?}", input, out_dir);
         }
 
-        cli::Commands::Keygen => match executors::keygen() {
-            Ok(()) => println!("Keystore generated successfully."),
-            Err(err) => {
-                eprintln!("Error generating keystore: {}", err);
+        cli::Commands::Keygen => {
+            if let Err(err) = executors::keygen() {
+                eprintln!("{}", err);
                 process::exit(1);
             }
-        },
+        }
 
         cli::Commands::Config { action } => match action {
             cli::ConfigAction::Get { key } => {
@@ -34,14 +33,14 @@ fn main() {
 
             cli::ConfigAction::Set { key, value } => {
                 if let Err(err) = key.set(&value) {
-                    eprintln!("Error setting config value: {}", err);
+                    eprintln!("{}", err);
                     process::exit(1);
                 }
             }
 
             cli::ConfigAction::Delete { key } => {
                 if let Err(err) = key.delete() {
-                    eprintln!("Error deleting config key: {}", err);
+                    eprintln!("{}", err);
                     process::exit(1);
                 }
             }

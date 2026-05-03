@@ -49,8 +49,8 @@ struct AppConfig {
 
 #[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
 pub struct JavaConfig {
-    #[validate(custom = validate_java_path)]
-    pub path: Option<String>,
+    #[validate(custom = validate_java_home)]
+    pub home: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
@@ -93,9 +93,9 @@ pub struct KeystoreConfig {
 
 #[derive(AsRefStr, Display, EnumString, Debug, Clone, ValueEnum)]
 pub enum Config {
-    #[strum(serialize = "java.path")]
-    #[clap(name = "java.path")]
-    JavaPath,
+    #[strum(serialize = "java.home")]
+    #[clap(name = "java.home")]
+    JavaHome,
 
     #[strum(serialize = "apktool.path")]
     #[clap(name = "apktool.path")]
@@ -154,7 +154,7 @@ impl Config {
             .expect("Failed to read from config cache");
 
         let cached_value = match self {
-            Config::JavaPath => cache.java.path.clone(),
+            Config::JavaHome => cache.java.home.clone(),
             Config::ApktoolPath => cache.apktool.path.clone(),
             Config::ApkeditorPath => cache.apkeditor.path.clone(),
             Config::ApksignerPath => cache.apksigner.path.clone(),
@@ -188,7 +188,7 @@ impl Config {
         let old_config = cache.clone();
 
         match self {
-            Config::JavaPath => cache.java.path = Some(value.to_string()),
+            Config::JavaHome => cache.java.home = Some(value.to_string()),
             Config::ApktoolPath => cache.apktool.path = Some(value.to_string()),
             Config::ApkeditorPath => cache.apkeditor.path = Some(value.to_string()),
             Config::ApksignerPath => cache.apksigner.path = Some(value.to_string()),
@@ -212,7 +212,7 @@ impl Config {
             .expect("Failed to write to config cache");
 
         match self {
-            Config::JavaPath => cache.java.path = None,
+            Config::JavaHome => cache.java.home = None,
             Config::ApktoolPath => cache.apktool.path = None,
             Config::ApkeditorPath => cache.apkeditor.path = None,
             Config::ApksignerPath => cache.apksigner.path = None,

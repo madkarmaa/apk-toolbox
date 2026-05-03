@@ -1,26 +1,26 @@
 use std::path::Path;
 
-pub fn validate_java_path(path: &Option<String>) -> Result<(), serde_valid::validation::Error> {
+pub fn validate_java_home(path: &Option<String>) -> Result<(), serde_valid::validation::Error> {
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
     if !p.exists() {
         return Err(serde_valid::validation::Error::Custom(
-            "Java path must exist".to_owned(),
+            "Java home must exist".to_owned(),
         ));
     }
     if !p.is_dir() {
         return Err(serde_valid::validation::Error::Custom(
-            "Java path must be a directory".to_owned(),
+            "Java home must be a directory".to_owned(),
         ));
     }
     if path.ends_with('/') || path.ends_with('\\') {
         return Err(serde_valid::validation::Error::Custom(
-            "Java path must not have a trailing slash".to_owned(),
+            "Java home must not have a trailing slash".to_owned(),
         ));
     }
     if path.ends_with("/bin") || path.ends_with("\\bin") {
         return Err(serde_valid::validation::Error::Custom(
-            "Java path must not end in /bin segment".to_owned(),
+            "Java home must not end in /bin segment".to_owned(),
         ));
     }
     Ok(())

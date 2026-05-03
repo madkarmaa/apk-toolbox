@@ -24,8 +24,8 @@ pub fn keygen(
                 .to_string()
         })?;
 
-    let javabase_path = Config::JavaPath.get().ok_or_else(|| {
-        "Java path not configured. Please configure it using the config command.".to_string()
+    let javabase_path = Config::JavaHome.get().ok_or_else(|| {
+        "Java home not configured. Please configure it using the config command.".to_string()
     })?;
 
     let executable_name = if cfg!(target_os = "windows") {

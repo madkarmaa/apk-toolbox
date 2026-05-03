@@ -77,7 +77,8 @@ pub struct ZipalignConfig {
     pub path: Option<String>,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+#[derive(Debug, Serialize, Deserialize, Validate, Clone)]
+#[serde(default)]
 pub struct KeystoreConfig {
     #[validate(custom = validate_keystore_path)]
     pub path: Option<String>,
@@ -89,6 +90,22 @@ pub struct KeystoreConfig {
         message = "Keystore password must be at least 6 characters long."
     )]
     pub password: Option<String>,
+}
+
+impl Default for KeystoreConfig {
+    fn default() -> Self {
+        Self {
+            path: Some(
+                crate::utils::root_dir()
+                    .join("keystore.jks")
+                    .to_string_lossy()
+                    .to_string(),
+            ),
+
+            alias: None,
+            password: None,
+        }
+    }
 }
 
 #[derive(AsRefStr, Display, EnumString, Debug, Clone, ValueEnum)]
@@ -153,7 +170,7 @@ impl Config {
             .read()
             .expect("Failed to read from config cache");
 
-        let cached_value = match self {
+        match self {
             Config::JavaHome => cache.java.home.clone(),
             Config::ApktoolPath => cache.apktool.path.clone(),
             Config::ApkeditorPath => cache.apkeditor.path.clone(),
@@ -162,21 +179,6 @@ impl Config {
             Config::KeystorePath => cache.keystore.path.clone(),
             Config::KeystoreAlias => cache.keystore.alias.clone(),
             Config::KeystorePassword => cache.keystore.password.clone(),
-        };
-
-        if cached_value.is_some() {
-            return cached_value;
-        }
-
-        // default values for certain keys
-        match self {
-            Config::KeystorePath => Some(
-                crate::utils::root_dir()
-                    .join("keystore.jks")
-                    .to_string_lossy()
-                    .to_string(),
-            ),
-            _ => None,
         }
     }
 

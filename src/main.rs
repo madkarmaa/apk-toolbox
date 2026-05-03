@@ -26,10 +26,13 @@ fn main() {
         }
 
         cli::Commands::Config { action } => match action {
-            cli::ConfigAction::Get { key } => {
-                let value = key.get().expect("Config key should be defined");
-                println!("{}", value);
-            }
+            cli::ConfigAction::Get { key } => match key.get() {
+                Some(value) => println!("{}", value),
+                None => {
+                    eprintln!("{} not configured.", key);
+                    process::exit(1);
+                }
+            },
 
             cli::ConfigAction::Set { key, value } => {
                 if let Err(err) = key.set(&value) {

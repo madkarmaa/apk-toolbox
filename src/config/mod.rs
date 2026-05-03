@@ -1,21 +1,94 @@
+pub mod validators;
+
 use crate::utils::root_dir;
 use clap::ValueEnum;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use serde_valid::Validate;
 use std::env;
 use std::fmt::Debug;
 use std::fs;
-use std::fs::File;
 use std::io;
-use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::sync::{OnceLock, RwLock};
 use strum_macros::{AsRefStr, Display, EnumString};
+use validators::*;
 
-pub const CONFIG_FILE_NAME: &str = concat!(".", env!("CARGO_PKG_NAME"));
-static CONFIG_CACHE: OnceLock<RwLock<HashMap<String, String>>> = OnceLock::new();
+pub const CONFIG_FILE_NAME: &str = concat!(env!("CARGO_PKG_NAME"), ".config.toml");
+static CONFIG_CACHE: OnceLock<RwLock<AppConfig>> = OnceLock::new();
 
 fn config_file_path() -> PathBuf {
     root_dir().join(CONFIG_FILE_NAME)
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+struct AppConfig {
+    #[serde(default)]
+    #[validate]
+    pub java: JavaConfig,
+
+    #[serde(default)]
+    #[validate]
+    pub apktool: ApktoolConfig,
+
+    #[serde(default)]
+    #[validate]
+    pub apkeditor: ApkeditorConfig,
+
+    #[serde(default)]
+    #[validate]
+    pub apksigner: ApksignerConfig,
+
+    #[serde(default)]
+    #[validate]
+    pub zipalign: ZipalignConfig,
+
+    #[serde(default)]
+    #[validate]
+    pub keystore: KeystoreConfig,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+pub struct JavaConfig {
+    #[validate(custom = validate_java_path)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+pub struct ApktoolConfig {
+    #[validate(custom = validate_jar_path)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+pub struct ApkeditorConfig {
+    #[validate(custom = validate_jar_path)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+pub struct ApksignerConfig {
+    #[validate(custom = validate_jar_path)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+pub struct ZipalignConfig {
+    #[validate(custom = validate_zipalign_path)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Validate, Clone)]
+pub struct KeystoreConfig {
+    #[validate(custom = validate_keystore_path)]
+    pub path: Option<String>,
+
+    pub alias: Option<String>,
+
+    #[validate(
+        min_length = 6,
+        message = "Keystore password must be at least 6 characters long."
+    )]
+    pub password: Option<String>,
 }
 
 #[derive(AsRefStr, Display, EnumString, Debug, Clone, ValueEnum)]
@@ -54,38 +127,42 @@ pub enum Config {
 }
 
 impl Config {
-    fn read_config_file() -> io::Result<HashMap<String, String>> {
-        let file = File::open(config_file_path())?;
-        let reader = BufReader::new(file);
-        let mut config = HashMap::new();
-
-        for line_res in reader.lines() {
-            let line = line_res?;
-            if let Some((key, value)) = line.split_once('=') {
-                config.insert(key.trim().to_string(), value.trim().to_string());
-            }
+    fn read_config_file() -> io::Result<AppConfig> {
+        let path = config_file_path();
+        if !path.exists() {
+            return Ok(AppConfig::default());
         }
+
+        let content = fs::read_to_string(path)?;
+
+        let config: AppConfig =
+            toml::from_str(&content).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
         Ok(config)
     }
 
-    fn cache() -> &'static RwLock<HashMap<String, String>> {
+    fn cache() -> &'static RwLock<AppConfig> {
         CONFIG_CACHE.get_or_init(|| {
-            let map = Self::read_config_file()
-                .unwrap_or_default()
-                .into_iter()
-                .collect();
-
-            RwLock::new(map)
+            let config = Self::read_config_file().unwrap_or_default();
+            RwLock::new(config)
         })
     }
 
     pub fn get(&self) -> Option<String> {
-        let cached_value = Self::cache()
+        let cache = Self::cache()
             .read()
-            .expect("Failed to read from config cache")
-            .get(self.as_ref())
-            .cloned();
+            .expect("Failed to read from config cache");
+
+        let cached_value = match self {
+            Config::JavaPath => cache.java.path.clone(),
+            Config::ApktoolPath => cache.apktool.path.clone(),
+            Config::ApkeditorPath => cache.apkeditor.path.clone(),
+            Config::ApksignerPath => cache.apksigner.path.clone(),
+            Config::ZipalignPath => cache.zipalign.path.clone(),
+            Config::KeystorePath => cache.keystore.path.clone(),
+            Config::KeystoreAlias => cache.keystore.alias.clone(),
+            Config::KeystorePassword => cache.keystore.password.clone(),
+        };
 
         if cached_value.is_some() {
             return cached_value;
@@ -104,40 +181,56 @@ impl Config {
     }
 
     pub fn set(&self, value: &str) -> io::Result<()> {
-        if matches!(self, Config::KeystorePassword) && value.len() < 6 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "Keystore password must be at least 6 characters long.",
-            ));
+        let mut cache = Self::cache()
+            .write()
+            .expect("Failed to write to config cache");
+
+        let old_config = cache.clone();
+
+        match self {
+            Config::JavaPath => cache.java.path = Some(value.to_string()),
+            Config::ApktoolPath => cache.apktool.path = Some(value.to_string()),
+            Config::ApkeditorPath => cache.apkeditor.path = Some(value.to_string()),
+            Config::ApksignerPath => cache.apksigner.path = Some(value.to_string()),
+            Config::ZipalignPath => cache.zipalign.path = Some(value.to_string()),
+            Config::KeystorePath => cache.keystore.path = Some(value.to_string()),
+            Config::KeystoreAlias => cache.keystore.alias = Some(value.to_string()),
+            Config::KeystorePassword => cache.keystore.password = Some(value.to_string()),
         }
 
-        Self::cache()
-            .write()
-            .expect("Failed to write to config cache")
-            .insert(self.to_string(), value.to_string());
+        if let Err(e) = cache.validate() {
+            *cache = old_config;
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, e.to_string()));
+        }
 
-        Self::save_to_disk()
+        Self::save_to_disk(&cache)
     }
 
     pub fn delete(&self) -> io::Result<()> {
-        Self::cache()
+        let mut cache = Self::cache()
             .write()
-            .expect("Failed to write to config cache")
-            .remove(self.as_ref());
-        Self::save_to_disk()
+            .expect("Failed to write to config cache");
+
+        match self {
+            Config::JavaPath => cache.java.path = None,
+            Config::ApktoolPath => cache.apktool.path = None,
+            Config::ApkeditorPath => cache.apkeditor.path = None,
+            Config::ApksignerPath => cache.apksigner.path = None,
+            Config::ZipalignPath => cache.zipalign.path = None,
+            Config::KeystorePath => cache.keystore.path = None,
+            Config::KeystoreAlias => cache.keystore.alias = None,
+            Config::KeystorePassword => cache.keystore.password = None,
+        }
+
+        Self::save_to_disk(&cache)
     }
 
-    fn save_to_disk() -> io::Result<()> {
+    fn save_to_disk(config: &AppConfig) -> io::Result<()> {
         let config_path = config_file_path();
         let tmp = config_path.with_extension("tmp");
 
-        let contents = Self::cache()
-            .read()
-            .expect("Failed to read from config cache")
-            .iter()
-            .map(|(config_key, value)| format!("{}={}", config_key, value))
-            .collect::<Vec<String>>()
-            .join("\n");
+        let contents = toml::to_string_pretty(config)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
         fs::write(&tmp, contents)?;
         fs::rename(&tmp, config_path)?;

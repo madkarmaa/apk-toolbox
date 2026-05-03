@@ -1,4 +1,4 @@
 /target
-.apk-toolbox
+apk-toolbox.config.toml
 *.bat
 *.jks

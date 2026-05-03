@@ -17,12 +17,6 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
         ));
     }
 
-    if path.ends_with('/') || path.ends_with('\\') {
-        return Err(validation::Error::Custom(
-            "Java home must not have a trailing slash".to_string(),
-        ));
-    }
-
     if path.ends_with("/bin") || path.ends_with("\\bin") {
         return Err(validation::Error::Custom(
             "Java home must not end in /bin segment".to_string(),

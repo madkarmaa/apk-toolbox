@@ -104,6 +104,13 @@ impl Config {
     }
 
     pub fn set(&self, value: &str) -> io::Result<()> {
+        if matches!(self, Config::KeystorePassword) && value.len() < 6 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Keystore password must be at least 6 characters long.",
+            ));
+        }
+
         Self::cache()
             .write()
             .expect("Failed to write to config cache")

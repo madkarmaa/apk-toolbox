@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::constants::errors;
 use crate::utils;
 use std::path::PathBuf;
 
@@ -12,21 +13,15 @@ pub fn keygen(
 
     let keystore_alias = keystore_alias
         .or_else(|| Config::KeystoreAlias.get())
-        .ok_or_else(|| {
-            "Keystore alias not found. Please pass it with the -a flag or configure it using the config command."
-                .to_string()
-        })?;
+        .ok_or_else(|| errors::KEYSTORE_ALIAS_NOT_FOUND.to_string())?;
 
     let keystore_password = keystore_password
         .or_else(|| Config::KeystorePassword.get())
-        .ok_or_else(|| {
-            "Keystore password not found. Please pass it with the -p flag or configure it using the config command."
-                .to_string()
-        })?;
+        .ok_or_else(|| errors::KEYSTORE_PASSWORD_NOT_FOUND.to_string())?;
 
-    let javabase_path = Config::JavaHome.get().ok_or_else(|| {
-        "Java home not configured. Please configure it using the config command.".to_string()
-    })?;
+    let javabase_path = Config::JavaHome
+        .get()
+        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
 
     let executable_name = if cfg!(target_os = "windows") {
         "keytool.exe"

@@ -19,7 +19,7 @@ pub fn keygen(
         .or_else(|| Config::KeystorePassword.get())
         .ok_or_else(|| errors::KEYSTORE_PASSWORD_NOT_FOUND.to_string())?;
 
-    let javabase_path = Config::JavaHome
+    let java_home = Config::JavaHome
         .get()
         .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
 
@@ -29,9 +29,7 @@ pub fn keygen(
         "keytool"
     };
 
-    let keytool_path = PathBuf::from(javabase_path)
-        .join("bin")
-        .join(executable_name);
+    let keytool_path = PathBuf::from(java_home).join("bin").join(executable_name);
 
     println!("Generating keystore...");
 

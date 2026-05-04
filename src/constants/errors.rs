@@ -1,3 +1,5 @@
+pub const KEYSTORE_PATH_EXPECTED: &str = "Keystore path should have a default value";
+
 pub const KEYSTORE_ALIAS_NOT_FOUND: &str = "Keystore alias not found. Please pass it with the -a flag or configure it using the config command.";
 
 pub const KEYSTORE_PASSWORD_NOT_FOUND: &str = "Keystore password not found. Please pass it with the -p flag or configure it using the config command.";

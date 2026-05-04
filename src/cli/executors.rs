@@ -1,7 +1,51 @@
 use crate::config::Config;
 use crate::constants::errors;
 use crate::utils;
+use std::env;
 use std::path::PathBuf;
+
+pub fn compile(
+    input: PathBuf,
+    out_dir: Option<PathBuf>,
+    keystore_alias: Option<String>,
+    keystore_password: Option<String>,
+) -> Result<(), String> {
+    let out_dir =
+        out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+
+    let keystore_path = Config::KeystorePath
+        .get()
+        .expect(errors::KEYSTORE_PATH_EXPECTED);
+
+    let keystore_alias = keystore_alias
+        .or_else(|| Config::KeystoreAlias.get())
+        .ok_or_else(|| errors::KEYSTORE_ALIAS_NOT_FOUND.to_string())?;
+
+    let keystore_password = keystore_password
+        .or_else(|| Config::KeystorePassword.get())
+        .ok_or_else(|| errors::KEYSTORE_PASSWORD_NOT_FOUND.to_string())?;
+
+    println!(
+        "Compiling {} to {}",
+        input.to_string_lossy(),
+        out_dir.to_string_lossy()
+    );
+
+    Ok(())
+}
+
+pub fn decompile(input: PathBuf, out_dir: Option<PathBuf>) -> Result<(), String> {
+    let out_dir =
+        out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+
+    println!(
+        "Decompiling {} to {}",
+        input.to_string_lossy(),
+        out_dir.to_string_lossy()
+    );
+
+    Ok(())
+}
 
 pub fn keygen(
     keystore_alias: Option<String>,
@@ -9,7 +53,7 @@ pub fn keygen(
 ) -> Result<(), String> {
     let keystore_path = Config::KeystorePath
         .get()
-        .expect("Keystore path should have a default value");
+        .expect(errors::KEYSTORE_PATH_EXPECTED);
 
     let keystore_alias = keystore_alias
         .or_else(|| Config::KeystoreAlias.get())

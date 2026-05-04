@@ -5,7 +5,7 @@ use std::env;
 use std::path::PathBuf;
 
 pub fn compile(
-    input: PathBuf,
+    input_dir: PathBuf,
     out_dir: Option<PathBuf>,
     keystore_alias: Option<String>,
     keystore_password: Option<String>,
@@ -27,7 +27,7 @@ pub fn compile(
 
     println!(
         "Compiling {} to {}",
-        input.to_string_lossy(),
+        input_dir.to_string_lossy(),
         out_dir.to_string_lossy()
     );
 

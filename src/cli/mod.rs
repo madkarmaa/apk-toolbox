@@ -22,7 +22,7 @@ pub enum Commands {
     /// Compile a smali directory into a ready-to-use APK file.
     Compile {
         /// The input smali directory.
-        input: PathBuf,
+        input_dir: PathBuf,
         /// The output directory for the compiled APK. If not specified, the APK will be created in the current directory.
         out_dir: Option<PathBuf>,
 

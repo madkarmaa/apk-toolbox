@@ -4,14 +4,55 @@ use crate::utils;
 use std::env;
 use std::path::PathBuf;
 
+fn assert_is_apk(path: &PathBuf) -> Result<(), String> {
+    if !path.exists() {
+        return Err(format!(
+            "Executable not found at {}",
+            path.to_string_lossy()
+        ));
+    }
+
+    if !path.is_file() {
+        return Err(format!("Expected {} to be a file", path.to_string_lossy()));
+    }
+
+    if !path.extension().map_or(false, |ext| ext == "apk") {
+        return Err(format!(
+            "Expected {} to be an APK file",
+            path.to_string_lossy()
+        ));
+    }
+
+    Ok(())
+}
+
+fn assert_is_directory(path: &PathBuf, should_exist: bool) -> Result<(), String> {
+    if should_exist && !path.exists() {
+        return Err(format!("Directory not found at {}", path.to_string_lossy()));
+    }
+
+    if !path.is_dir() {
+        return Err(format!(
+            "Expected {} to be a directory",
+            path.to_string_lossy()
+        ));
+    }
+
+    Ok(())
+}
+
 pub fn compile(
     input_dir: PathBuf,
     out_dir: Option<PathBuf>,
     keystore_alias: Option<String>,
     keystore_password: Option<String>,
 ) -> Result<(), String> {
+    assert_is_directory(&input_dir, true)?;
+
     let out_dir =
         out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+
+    assert_is_directory(&out_dir, false)?;
 
     let keystore_path = Config::KeystorePath
         .get()
@@ -35,8 +76,12 @@ pub fn compile(
 }
 
 pub fn decompile(input: PathBuf, out_dir: Option<PathBuf>) -> Result<(), String> {
+    assert_is_apk(&input)?;
+
     let out_dir =
         out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+
+    assert_is_directory(&out_dir, false)?;
 
     println!(
         "Decompiling {} to {}",

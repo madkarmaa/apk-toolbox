@@ -77,6 +77,7 @@ jobs:
         run: ${{ matrix.use_cross && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }}
 
       - name: Rename artifact
+        shell: bash
         run: |
           ext=""
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then

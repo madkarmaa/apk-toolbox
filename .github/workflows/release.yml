@@ -76,13 +76,19 @@ jobs:
       - name: Build
         run: ${{ matrix.use_cross && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }}
 
+      - name: Rename artifact
+        run: |
+          ext=""
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            ext=".exe"
+          fi
+          mv target/${{ matrix.target }}/release/apk-toolbox${ext} target/${{ matrix.target }}/release/apk-toolbox-${{ matrix.artifact }}${ext}
+
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: |
-            target/${{ matrix.target }}/release/apk-toolbox
-            target/${{ matrix.target }}/release/apk-toolbox.exe
+          path: target/${{ matrix.target }}/release/apk-toolbox-${{ matrix.artifact }}*
           if-no-files-found: ignore
 
   release:

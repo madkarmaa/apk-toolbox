@@ -5,9 +5,8 @@ mod utils;
 
 use clap::Parser;
 use cli::{Cli, executors};
-use std::process;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     match args.command {
@@ -16,41 +15,41 @@ fn main() {
             out_dir,
             keystore_alias,
             keystore_password,
-        } => {}
+        } => {
+            executors::compile(input, out_dir, keystore_alias, keystore_password)?;
+            Ok(())
+        }
 
-        cli::Commands::Decompile { input, out_dir } => {}
+        cli::Commands::Decompile { input, out_dir } => {
+            executors::decompile(input, out_dir)?;
+            Ok(())
+        }
 
         cli::Commands::Keygen {
             keystore_alias,
             keystore_password,
         } => {
-            if let Err(err) = executors::keygen(keystore_alias, keystore_password) {
-                eprintln!("{}", err);
-                process::exit(1);
-            }
+            executors::keygen(keystore_alias, keystore_password)?;
+            Ok(())
         }
 
         cli::Commands::Config { action } => match action {
             cli::ConfigAction::Get { key } => match key.get() {
-                Some(value) => println!("{}", value),
-                None => {
-                    eprintln!("{} not configured.", key);
-                    process::exit(1);
+                Some(value) => {
+                    println!("{}", value);
+                    Ok(())
                 }
+                None => Err(format!("{} not configured.", key).into()),
             },
 
             cli::ConfigAction::Set { key, value } => {
-                if let Err(err) = key.set(&value) {
-                    eprintln!("{}", err);
-                    process::exit(1);
-                }
+                key.set(&value)?;
+                Ok(())
             }
 
             cli::ConfigAction::Delete { key } => {
-                if let Err(err) = key.delete() {
-                    eprintln!("{}", err);
-                    process::exit(1);
-                }
+                key.delete()?;
+                Ok(())
             }
         },
     }

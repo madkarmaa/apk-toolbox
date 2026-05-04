@@ -23,7 +23,7 @@ pub fn keygen(
         .get()
         .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
 
-    let executable_name = if cfg!(target_os = "windows") {
+    let executable_name = if cfg!(windows) {
         "keytool.exe"
     } else {
         "keytool"
@@ -31,7 +31,7 @@ pub fn keygen(
 
     let keytool_path = PathBuf::from(java_home).join("bin").join(executable_name);
 
-    println!("Generating keystore...");
+    println!("Generating key '{}'", keystore_alias);
 
     utils::execute_blocking(
         &keytool_path.to_string_lossy(),
@@ -57,6 +57,10 @@ pub fn keygen(
     )
     .map_err(|err| err.to_string())?;
 
-    println!("Keystore generated successfully at {}", keystore_path);
+    println!(
+        "Key '{}' generated successfully at {}",
+        keystore_alias, keystore_path
+    );
+
     Ok(())
 }

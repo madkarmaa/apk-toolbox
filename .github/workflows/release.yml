@@ -61,8 +61,16 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
 
-      - name: Install cross
+      - name: Cache cross
         if: matrix.use_cross
+        id: cache-cross
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/bin/cross
+          key: ${{ runner.os }}-cross-bin
+
+      - name: Install cross
+        if: matrix.use_cross && steps.cache-cross.outputs.cache-hit != 'true'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build

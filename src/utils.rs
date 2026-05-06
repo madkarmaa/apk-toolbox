@@ -1,6 +1,6 @@
 use std::env;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 pub fn root_dir() -> PathBuf {
@@ -36,4 +36,51 @@ pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
     }
 
     Ok(())
+}
+
+pub fn assert_is_file(path: &Path, should_exist: bool) -> Result<(), String> {
+    if should_exist && !path.exists() {
+        return Err(format!("File not found at {}", path.to_string_lossy()));
+    }
+
+    if !path.is_file() {
+        return Err(format!("Expected {} to be a file", path.to_string_lossy()));
+    }
+
+    Ok(())
+}
+
+pub fn assert_is_directory(path: &Path, should_exist: bool) -> Result<(), String> {
+    if should_exist && !path.exists() {
+        return Err(format!("Directory not found at {}", path.to_string_lossy()));
+    }
+
+    if !path.is_dir() {
+        return Err(format!(
+            "Expected {} to be a directory",
+            path.to_string_lossy()
+        ));
+    }
+
+    Ok(())
+}
+
+pub fn assert_has_extension(
+    path: &Path,
+    extensions: &[&str],
+    should_exist: bool,
+) -> Result<(), String> {
+    assert_is_file(path, should_exist)?;
+
+    if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {
+        if extensions.contains(&ext) {
+            return Ok(());
+        }
+    }
+
+    Err(format!(
+        "Expected {} to have one of the extensions: {}",
+        path.to_string_lossy(),
+        extensions.join(", ")
+    ))
 }

@@ -3,6 +3,20 @@ use crate::constants::errors;
 use crate::utils;
 use std::path::PathBuf;
 
+fn get_java_bin(name: &str) -> Result<PathBuf, String> {
+    let java_home = Config::JavaHome
+        .get()
+        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
+
+    let executable_name = if cfg!(windows) {
+        format!("{}.exe", name)
+    } else {
+        name.to_string()
+    };
+
+    Ok(PathBuf::from(java_home).join("bin").join(executable_name))
+}
+
 pub fn compile(
     input_dir: PathBuf,
     out_file: Option<PathBuf>,
@@ -22,15 +36,7 @@ pub fn compile(
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
-    let java_home = Config::JavaHome
-        .get()
-        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
-
-    let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
-
-    let java_path = PathBuf::from(java_home)
-        .join("bin")
-        .join(java_executable_name);
+    let java_path = get_java_bin("java")?;
 
     let apktool_path = Config::ApktoolPath
         .get()
@@ -130,15 +136,7 @@ pub fn compile(
 }
 
 fn merge_apks(input: &PathBuf) -> Result<PathBuf, String> {
-    let java_home = Config::JavaHome
-        .get()
-        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
-
-    let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
-
-    let java_path = PathBuf::from(java_home)
-        .join("bin")
-        .join(java_executable_name);
+    let java_path = get_java_bin("java")?;
 
     let apkeditor_path = Config::ApkeditorPath
         .get()
@@ -181,15 +179,7 @@ pub fn decompile(
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
-    let java_home = Config::JavaHome
-        .get()
-        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
-
-    let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
-
-    let java_path = PathBuf::from(java_home)
-        .join("bin")
-        .join(java_executable_name);
+    let java_path = get_java_bin("java")?;
 
     let apktool_path = Config::ApktoolPath
         .get()
@@ -255,17 +245,7 @@ pub fn keygen(
         .or_else(|| Config::KeystorePassword.get())
         .ok_or_else(|| errors::KEYSTORE_PASSWORD_NOT_FOUND.to_string())?;
 
-    let java_home = Config::JavaHome
-        .get()
-        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
-
-    let executable_name = if cfg!(windows) {
-        "keytool.exe"
-    } else {
-        "keytool"
-    };
-
-    let keytool_path = PathBuf::from(java_home).join("bin").join(executable_name);
+    let keytool_path = get_java_bin("keytool")?;
 
     println!("Generating key '{}'", keystore_alias);
 

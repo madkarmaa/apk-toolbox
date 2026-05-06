@@ -5,6 +5,28 @@ use clap::{Parser, Subcommand};
 use std::fmt::Debug;
 use std::path::PathBuf;
 
+fn trim_string(v: &str) -> Result<String, String> {
+    Ok(v.trim().to_string())
+}
+
+fn validate_keystore_alias(v: &str) -> Result<String, String> {
+    let trimmed = v.trim();
+    if trimmed.is_empty() {
+        Err("Keystore alias cannot be empty".to_string())
+    } else {
+        Ok(trimmed.to_string())
+    }
+}
+
+fn validate_keystore_password(v: &str) -> Result<String, String> {
+    let trimmed = v.trim();
+    if trimmed.len() < 6 {
+        Err("Keystore password must be at least 6 characters".to_string())
+    } else {
+        Ok(trimmed.to_string())
+    }
+}
+
 #[derive(Parser, Debug)]
 #[command(
     name = env!("CARGO_PKG_NAME"),
@@ -17,9 +39,6 @@ pub struct Cli {
     pub command: Commands,
 }
 
-// TODO: check keystore alias is not empty
-// TODO: check keystore password is at least 6 characters
-
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Compile a smali directory into a ready-to-use APK file.
@@ -31,11 +50,11 @@ pub enum Commands {
         out_file: Option<PathBuf>,
 
         /// The keystore alias to use.
-        #[arg(short = 'a', long)]
+        #[arg(short = 'a', long, value_parser = validate_keystore_alias)]
         keystore_alias: Option<String>,
 
         /// The password for the keystore.
-        #[arg(short = 'p', long)]
+        #[arg(short = 'p', long, value_parser = validate_keystore_password)]
         keystore_password: Option<String>,
 
         /// The number of parallel jobs to use for compilation. If not specified, the number of CPU cores will be used.
@@ -59,11 +78,11 @@ pub enum Commands {
     /// Generate a keystore file for signing APKs.
     Keygen {
         /// The keystore alias to use.
-        #[arg(short = 'a', long)]
+        #[arg(short = 'a', long, value_parser = validate_keystore_alias)]
         keystore_alias: Option<String>,
 
         /// The password for the keystore.
-        #[arg(short = 'p', long)]
+        #[arg(short = 'p', long, value_parser = validate_keystore_password)]
         keystore_password: Option<String>,
     },
 
@@ -88,6 +107,7 @@ pub enum ConfigAction {
         key: Config,
 
         /// The value to set for the configuration key.
+        #[arg(value_parser = trim_string)]
         value: String,
     },
 

@@ -42,6 +42,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.target }})
 
+    env:
+      CROSS_VERSION: "0.2.5"
+
     steps:
       - uses: actions/checkout@v6
 
@@ -67,11 +70,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/cross
-          key: ${{ runner.os }}-cross-bin
+          key: ${{ runner.os }}-cross-${{ env.CROSS_VERSION }}-bin
 
       - name: Install cross
         if: matrix.use_cross && steps.cache-cross.outputs.cache-hit != 'true'
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: cargo install cross --version ${{ env.CROSS_VERSION }}
 
       - name: Build
         run: ${{ matrix.use_cross && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }}

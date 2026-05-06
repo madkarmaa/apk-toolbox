@@ -12,12 +12,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match args.command {
         cli::Commands::Compile {
             input_dir,
-            out_dir,
+            out_file,
             keystore_alias,
             keystore_password,
             jobs,
         } => {
-            executors::compile(input_dir, out_dir, keystore_alias, keystore_password, jobs)?;
+            executors::compile(input_dir, out_file, keystore_alias, keystore_password, jobs)?;
             Ok(())
         }
 

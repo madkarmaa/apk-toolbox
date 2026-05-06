@@ -26,8 +26,9 @@ pub enum Commands {
     Compile {
         /// The input smali directory.
         input_dir: PathBuf,
-        /// The output directory for the compiled APK. If not specified, the APK will be created in the current directory.
-        out_dir: Option<PathBuf>,
+
+        /// The output file for the compiled APK. If not specified, the APK will be created in the current directory.
+        out_file: Option<PathBuf>,
 
         /// The keystore alias to use.
         #[arg(short = 'a', long)]
@@ -46,6 +47,7 @@ pub enum Commands {
     Decompile {
         /// The input APK file.
         input: PathBuf,
+
         /// The output directory for the decompiled smali files. If not specified, a directory with the same name as the APK will be created in the current directory.
         out_dir: Option<PathBuf>,
 

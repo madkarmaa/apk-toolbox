@@ -1,22 +1,20 @@
 use crate::config::Config;
 use crate::constants::errors;
 use crate::utils;
-use std::env;
 use std::path::PathBuf;
 
 pub fn compile(
     input_dir: PathBuf,
-    out_dir: Option<PathBuf>,
+    out_file: Option<PathBuf>,
     keystore_alias: Option<String>,
     keystore_password: Option<String>,
     jobs: Option<usize>,
 ) -> Result<(), String> {
     utils::assert_is_directory(&input_dir, true)?;
 
-    let out_dir =
-        out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+    let out_file = out_file.unwrap_or_else(|| utils::current_dir().join("output.apk"));
 
-    utils::assert_is_directory(&out_dir, false)?;
+    utils::assert_has_extension(&out_file, &["apk"], false)?;
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
@@ -35,7 +33,7 @@ pub fn compile(
     println!(
         "Compiling {} to {}",
         input_dir.to_string_lossy(),
-        out_dir.to_string_lossy()
+        out_file.to_string_lossy()
     );
 
     Ok(())
@@ -49,7 +47,7 @@ pub fn decompile(
     utils::assert_has_extension(&input, &["apk", "xapk", "apks"], true)?;
 
     let out_dir =
-        out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+        out_dir.unwrap_or_else(|| utils::current_dir().join(input.file_stem().unwrap_or_default()));
 
     utils::assert_is_directory(&out_dir, false)?;
 

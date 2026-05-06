@@ -115,23 +115,21 @@ pub fn decompile(
         .unwrap_or_default();
 
     if input_extension != "apk" {
-        println!(
-            "Detected split APK {} to merge",
-            input
-                .file_name()
-                .and_then(|name| name.to_str())
-                .unwrap_or_default()
-        );
-
+        println!("Detected split APK to merge");
         input = merge_apks(&input)?;
-
         println!("Merged APK created at {}", input.to_string_lossy());
     }
 
+    let input_file_name = input
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or_default();
+
     println!(
-        "Decompiling {} to {}",
-        input.to_string_lossy(),
-        out_dir.to_string_lossy()
+        "Decompiling {} to {} with {} parallel jobs",
+        input_file_name,
+        out_dir.to_string_lossy(),
+        jobs
     );
 
     utils::execute_blocking(

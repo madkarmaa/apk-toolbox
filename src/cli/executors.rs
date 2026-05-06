@@ -69,6 +69,9 @@ pub fn compile(
         jobs
     );
 
+    let unsigned_apk = out_file.with_extension("unsigned.apk");
+    let aligned_apk = out_file.with_extension("aligned.apk");
+
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
@@ -80,14 +83,14 @@ pub fn compile(
             &jobs.to_string(),
             &input_dir.to_string_lossy(),
             "-o",
-            &out_file.with_extension("unsigned.apk").to_string_lossy(),
+            &unsigned_apk.to_string_lossy(),
         ],
     )
     .map_err(|err| err.to_string())?;
 
     println!(
         "Compiled successfully to {}",
-        out_file.with_extension("unsigned.apk").to_string_lossy()
+        unsigned_apk.to_string_lossy()
     );
     println!("Aligning APK with zipalign");
 
@@ -97,16 +100,13 @@ pub fn compile(
             "-f",
             "-v",
             "4",
-            &out_file.with_extension("unsigned.apk").to_string_lossy(),
-            &out_file.with_extension("aligned.apk").to_string_lossy(),
+            &unsigned_apk.to_string_lossy(),
+            &aligned_apk.to_string_lossy(),
         ],
     )
     .map_err(|err| err.to_string())?;
 
-    println!(
-        "Aligned APK created at {}",
-        out_file.with_extension("aligned.apk").to_string_lossy()
-    );
+    println!("Aligned APK created at {}", aligned_apk.to_string_lossy());
     println!("Signing APK with apksigner");
 
     utils::execute_blocking(
@@ -125,7 +125,7 @@ pub fn compile(
             &format!("pass:{}", keystore_password),
             "--out",
             &out_file.to_string_lossy(),
-            &out_file.with_extension("aligned.apk").to_string_lossy(),
+            &aligned_apk.to_string_lossy(),
         ],
     )
     .map_err(|err| err.to_string())?;

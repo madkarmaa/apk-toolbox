@@ -1,3 +1,4 @@
+use crate::utils;
 use serde_valid::validation;
 use std::path::Path;
 
@@ -5,17 +6,7 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    if !p.exists() {
-        return Err(validation::Error::Custom(
-            "Java home must exist".to_string(),
-        ));
-    }
-
-    if !p.is_dir() {
-        return Err(validation::Error::Custom(
-            "Java home must be a directory".to_string(),
-        ));
-    }
+    utils::assert_is_directory(p, true).map_err(validation::Error::Custom)?;
 
     if path.ends_with("/bin") || path.ends_with("\\bin") {
         return Err(validation::Error::Custom(
@@ -30,19 +21,7 @@ pub fn validate_jar_path(path: &Option<String>) -> Result<(), validation::Error>
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    if !p.exists() {
-        return Err(validation::Error::Custom("Path must exist".to_string()));
-    }
-
-    if !p.is_file() {
-        return Err(validation::Error::Custom("Path must be a file".to_string()));
-    }
-
-    if !path.ends_with(".jar") {
-        return Err(validation::Error::Custom(
-            "Path must end in .jar".to_string(),
-        ));
-    }
+    utils::assert_has_extension(p, &["jar"], true).map_err(validation::Error::Custom)?;
 
     Ok(())
 }
@@ -51,18 +30,10 @@ pub fn validate_zipalign_path(path: &Option<String>) -> Result<(), validation::E
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    if !p.exists() {
-        return Err(validation::Error::Custom("Path must exist".to_string()));
-    }
+    utils::assert_is_file(p, true).map_err(validation::Error::Custom)?;
 
-    if !p.is_file() {
-        return Err(validation::Error::Custom("Path must be a file".to_string()));
-    }
-
-    if cfg!(windows) && !path.ends_with(".exe") {
-        return Err(validation::Error::Custom(
-            "Path must end in .exe on Windows".to_string(),
-        ));
+    if cfg!(windows) {
+        utils::assert_has_extension(p, &["exe"], true).map_err(validation::Error::Custom)?;
     }
 
     Ok(())
@@ -70,12 +41,9 @@ pub fn validate_zipalign_path(path: &Option<String>) -> Result<(), validation::E
 
 pub fn validate_keystore_path(path: &Option<String>) -> Result<(), validation::Error> {
     let Some(path) = path else { return Ok(()) };
+    let p = Path::new(path);
 
-    if !path.ends_with(".jks") {
-        return Err(validation::Error::Custom(
-            "Path must end in .jks".to_string(),
-        ));
-    }
+    utils::assert_has_extension(p, &["jks"], false).map_err(validation::Error::Custom)?;
 
     Ok(())
 }

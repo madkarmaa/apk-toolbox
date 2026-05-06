@@ -20,13 +20,21 @@ pub fn current_dir() -> PathBuf {
     env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
 }
 
-pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
-    let output = Command::new(program)
-        .args(args)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()?;
+fn cmd_to_string(cmd: &Command) -> String {
+    let prog = cmd.get_program().to_string_lossy();
+    let args: Vec<_> = cmd.get_args().map(|a| a.to_string_lossy()).collect();
 
+    std::iter::once(prog)
+        .chain(args)
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
+    let mut cmd = Command::new(program);
+    cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
+
+    let output = cmd.output()?;
     if !output.status.success() {
         let mut err = String::from_utf8_lossy(&output.stderr);
         if err.is_empty() {
@@ -35,7 +43,8 @@ pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
 
         return Err(io::Error::new(
             io::ErrorKind::Other,
-            format!("{}", err.trim()),
+            format!("{}\n\n{}", cmd_to_string(&cmd), err.trim()),
+            // format!("{}", err.trim()),
         ));
     }
 

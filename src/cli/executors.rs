@@ -22,6 +22,28 @@ pub fn compile(
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
+    let java_home = Config::JavaHome
+        .get()
+        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
+
+    let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
+
+    let java_path = PathBuf::from(java_home)
+        .join("bin")
+        .join(java_executable_name);
+
+    let apktool_path = Config::ApktoolPath
+        .get()
+        .ok_or_else(|| errors::APKTOOL_PATH_NOT_CONFIGURED.to_string())?;
+
+    let zipalign_path = Config::ZipalignPath
+        .get()
+        .ok_or_else(|| errors::ZIPALIGN_PATH_NOT_CONFIGURED.to_string())?;
+
+    let apksigner_path = Config::ApksignerPath
+        .get()
+        .ok_or_else(|| errors::APKSIGNER_PATH_NOT_CONFIGURED.to_string())?;
+
     let keystore_path = Config::KeystorePath
         .get()
         .expect(errors::KEYSTORE_PATH_EXPECTED);
@@ -35,10 +57,74 @@ pub fn compile(
         .ok_or_else(|| errors::KEYSTORE_PASSWORD_NOT_FOUND.to_string())?;
 
     println!(
-        "Compiling {} to {}",
+        "Compiling {} to {} with {} parallel jobs",
         input_dir.to_string_lossy(),
-        out_file.to_string_lossy()
+        out_file.to_string_lossy(),
+        jobs
     );
+
+    utils::execute_blocking(
+        &java_path.to_string_lossy(),
+        &[
+            "-jar",
+            &apktool_path,
+            "b",
+            "-f",
+            "--jobs",
+            &jobs.to_string(),
+            &input_dir.to_string_lossy(),
+            "-o",
+            &out_file.with_extension("unsigned.apk").to_string_lossy(),
+        ],
+    )
+    .map_err(|err| err.to_string())?;
+
+    println!(
+        "Compiled successfully to {}",
+        out_file.with_extension("unsigned.apk").to_string_lossy()
+    );
+    println!("Aligning APK with zipalign");
+
+    utils::execute_blocking(
+        &zipalign_path,
+        &[
+            "-f",
+            "-v",
+            "4",
+            &out_file.with_extension("unsigned.apk").to_string_lossy(),
+            &out_file.with_extension("aligned.apk").to_string_lossy(),
+        ],
+    )
+    .map_err(|err| err.to_string())?;
+
+    println!(
+        "Aligned APK created at {}",
+        out_file.with_extension("aligned.apk").to_string_lossy()
+    );
+    println!("Signing APK with apksigner");
+
+    utils::execute_blocking(
+        &java_path.to_string_lossy(),
+        &[
+            "-jar",
+            &apksigner_path,
+            "sign",
+            "--ks",
+            &keystore_path,
+            "--ks-key-alias",
+            &keystore_alias,
+            "--ks-pass",
+            &format!("pass:{}", keystore_password),
+            "--key-pass",
+            &format!("pass:{}", keystore_password),
+            "--out",
+            &out_file.to_string_lossy(),
+            &out_file.with_extension("aligned.apk").to_string_lossy(),
+        ],
+    )
+    .map_err(|err| err.to_string())?;
+
+    println!("Signed APK created at {}", out_file.to_string_lossy());
 
     Ok(())
 }

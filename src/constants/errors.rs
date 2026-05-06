@@ -12,3 +12,9 @@ pub const APKTOOL_PATH_NOT_CONFIGURED: &str =
 
 pub const APKEDITOR_PATH_NOT_CONFIGURED: &str =
     "Apkeditor path not configured. Please configure it using the config command.";
+
+pub const ZIPALIGN_PATH_NOT_CONFIGURED: &str =
+    "Zipalign path not configured. Please configure it using the config command.";
+
+pub const APKSIGNER_PATH_NOT_CONFIGURED: &str =
+    "Apksigner path not configured. Please configure it using the config command.";

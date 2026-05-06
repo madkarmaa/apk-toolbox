@@ -77,7 +77,7 @@ pub fn compile(
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            format!("-Xmx{}", jvm_heap).as_str(),
+            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apktool_path,
             "b",
@@ -113,7 +113,7 @@ pub fn compile(
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            format!("-Xmx{}", jvm_heap).as_str(),
+            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apksigner_path,
             "sign",
@@ -148,7 +148,7 @@ fn merge_apks(input: &PathBuf, jvm_heap: &String) -> anyhow::Result<PathBuf> {
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            format!("-Xmx{}", jvm_heap).as_str(),
+            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apkeditor_path,
             "m",
@@ -214,7 +214,7 @@ pub fn decompile(
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            format!("-Xmx{}", jvm_heap).as_str(),
+            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apktool_path,
             "d",

@@ -155,6 +155,10 @@ impl Config {
         let config: AppConfig =
             toml::from_str(&content).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
+        config
+            .validate()
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+
         Ok(config)
     }
 

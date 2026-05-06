@@ -82,7 +82,7 @@ fn merge_apks(input: &PathBuf) -> Result<PathBuf, String> {
 }
 
 pub fn decompile(
-    input: PathBuf,
+    mut input: PathBuf,
     out_dir: Option<PathBuf>,
     jobs: Option<usize>,
 ) -> Result<(), String> {
@@ -114,14 +114,18 @@ pub fn decompile(
         .and_then(|ext| ext.to_str())
         .unwrap_or_default();
 
-    let mut input_merged: Option<PathBuf> = None;
     if input_extension != "apk" {
         println!(
-            "Merging base APK from {}...",
-            input_extension.to_uppercase()
+            "Detected split APK {} to merge",
+            input
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or_default()
         );
 
-        input_merged = Some(merge_apks(&input)?);
+        input = merge_apks(&input)?;
+
+        println!("Merged APK created at {}", input.to_string_lossy());
     }
 
     println!(
@@ -141,12 +145,12 @@ pub fn decompile(
             &jobs.to_string(),
             "-o",
             &out_dir.to_string_lossy(),
-            &input_merged
-                .unwrap_or_else(|| input.clone())
-                .to_string_lossy(),
+            &input.to_string_lossy(),
         ],
     )
     .map_err(|err| err.to_string())?;
+
+    println!("Decompiled successfully to {}", out_dir.to_string_lossy());
 
     Ok(())
 }

@@ -16,6 +16,10 @@ pub fn root_dir() -> PathBuf {
     path
 }
 
+pub fn current_dir() -> PathBuf {
+    env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+}
+
 pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
     let output = Command::new(program)
         .args(args)

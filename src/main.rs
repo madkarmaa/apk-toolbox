@@ -16,8 +16,16 @@ fn main() -> anyhow::Result<()> {
             keystore_alias,
             keystore_password,
             jobs,
+            jvm_heap,
         } => {
-            executors::compile(input_dir, out_file, keystore_alias, keystore_password, jobs)?;
+            executors::compile(
+                input_dir,
+                out_file,
+                keystore_alias,
+                keystore_password,
+                jobs,
+                jvm_heap,
+            )?;
             Ok(())
         }
 
@@ -25,8 +33,9 @@ fn main() -> anyhow::Result<()> {
             input,
             out_dir,
             jobs,
+            jvm_heap,
         } => {
-            executors::decompile(input, out_dir, jobs)?;
+            executors::decompile(input, out_dir, jobs, jvm_heap)?;
             Ok(())
         }
 

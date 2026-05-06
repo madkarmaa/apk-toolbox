@@ -60,6 +60,10 @@ pub enum Commands {
         /// The number of parallel jobs to use for compilation. If not specified, the number of CPU cores will be used.
         #[arg(short = 'j', long)]
         jobs: Option<usize>,
+
+        /// The JVM heap size to use for compilation.
+        #[arg(long, default_value = "2G", value_parser = trim_string)]
+        jvm_heap: String,
     },
 
     /// Decompile an APK file into a smali directory.
@@ -73,6 +77,10 @@ pub enum Commands {
         /// The number of parallel jobs to use for decompilation. If not specified, the number of CPU cores will be used.
         #[arg(short = 'j', long)]
         jobs: Option<usize>,
+
+        /// The JVM heap size to use for decompilation.
+        #[arg(long, default_value = "2G", value_parser = trim_string)]
+        jvm_heap: String,
     },
 
     /// Generate a keystore file for signing APKs.

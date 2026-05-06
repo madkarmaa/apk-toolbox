@@ -87,19 +87,19 @@ jobs:
         id: cache-docker
         uses: actions/cache@v5
         with:
-          path: /tmp/cross-image.tar
-          key: ${{ runner.os }}-cross-image-${{ steps.cross-sha.outputs.cross }}-${{ steps.cross-sha.outputs.toolchains }}
+          path: /tmp/cross-${{ matrix.target }}-image.tar
+          key: ${{ runner.os }}-cross-image-${{ matrix.target }}-${{ steps.cross-sha.outputs.cross }}-${{ steps.cross-sha.outputs.toolchains }}
 
       - name: Load Docker image
         if: matrix.use_cross && steps.cache-docker.outputs.cache-hit == 'true'
-        run: docker load -i /tmp/cross-image.tar
+        run: docker load -i /tmp/cross-${{ matrix.target }}-image.tar
 
       - name: Build
         run: ${{ matrix.use_cross && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }} --locked
 
       - name: Save Docker image
         if: matrix.use_cross && steps.cache-docker.outputs.cache-hit != 'true'
-        run: docker save ghcr.io/cross-rs/aarch64-linux-android:edge -o /tmp/cross-image.tar
+        run: docker save ghcr.io/cross-rs/${{ matrix.target }}:edge -o /tmp/cross-${{ matrix.target }}-image.tar
 
       - name: Rename artifact
         shell: bash

@@ -43,7 +43,8 @@ jobs:
     name: Build (${{ matrix.target }})
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -81,8 +82,24 @@ jobs:
         if: matrix.use_cross && steps.cache-cross.outputs.cache-hit != 'true'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
+      - name: Restore Docker image cache
+        if: matrix.use_cross
+        id: cache-docker
+        uses: actions/cache@v5
+        with:
+          path: /tmp/cross-image.tar
+          key: ${{ runner.os }}-cross-image-${{ steps.cross-sha.outputs.cross }}-${{ steps.cross-sha.outputs.toolchains }}
+
+      - name: Load Docker image
+        if: matrix.use_cross && steps.cache-docker.outputs.cache-hit == 'true'
+        run: docker load -i /tmp/cross-image.tar
+
       - name: Build
         run: ${{ matrix.use_cross && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }} --locked
+
+      - name: Save Docker image
+        if: matrix.use_cross && steps.cache-docker.outputs.cache-hit != 'true'
+        run: docker save ghcr.io/cross-rs/aarch64-linux-android:edge -o /tmp/cross-image.tar
 
       - name: Rename artifact
         shell: bash
@@ -106,7 +123,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Download all artifacts
         uses: actions/download-artifact@v8

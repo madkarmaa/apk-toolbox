@@ -99,7 +99,7 @@ jobs:
 
       - name: Save Docker image
         if: matrix.use_cross && steps.cache-docker.outputs.cache-hit != 'true'
-        run: docker save ghcr.io/cross-rs/${{ matrix.target }}:edge -o /tmp/cross-${{ matrix.target }}-image.tar
+        run: docker save ghcr.io/cross-rs/${{ matrix.target }}:main -o /tmp/cross-${{ matrix.target }}-image.tar
 
       - name: Rename artifact
         shell: bash

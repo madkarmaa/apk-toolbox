@@ -1,20 +1,53 @@
-pub const KEYSTORE_PATH_EXPECTED: &str = "Keystore path should have a default value";
+use thiserror::Error;
 
-pub const KEYSTORE_ALIAS_NOT_FOUND: &str = "Keystore alias not found. Please pass it with the -a flag or configure it using the config command.";
+#[derive(Error, Debug)]
+pub enum AppError {
+    #[error("Keystore path should have a default value")]
+    KeystorePathExpected,
 
-pub const KEYSTORE_PASSWORD_NOT_FOUND: &str = "Keystore password not found. Please pass it with the -p flag or configure it using the config command.";
+    #[error(
+        "Keystore alias not found. Please pass it with the -a flag or configure it using the config command."
+    )]
+    KeystoreAliasNotFound,
 
-pub const JAVA_HOME_NOT_CONFIGURED: &str =
-    "Java home not configured. Please configure it using the config command.";
+    #[error(
+        "Keystore password not found. Please pass it with the -p flag or configure it using the config command."
+    )]
+    KeystorePasswordNotFound,
 
-pub const APKTOOL_PATH_NOT_CONFIGURED: &str =
-    "Apktool path not configured. Please configure it using the config command.";
+    #[error("Java home not configured. Please configure it using the config command.")]
+    JavaHomeNotConfigured,
 
-pub const APKEDITOR_PATH_NOT_CONFIGURED: &str =
-    "Apkeditor path not configured. Please configure it using the config command.";
+    #[error("Apktool path not configured. Please configure it using the config command.")]
+    ApktoolPathNotConfigured,
 
-pub const ZIPALIGN_PATH_NOT_CONFIGURED: &str =
-    "Zipalign path not configured. Please configure it using the config command.";
+    #[error("Apkeditor path not configured. Please configure it using the config command.")]
+    ApkeditorPathNotConfigured,
 
-pub const APKSIGNER_PATH_NOT_CONFIGURED: &str =
-    "Apksigner path not configured. Please configure it using the config command.";
+    #[error("Zipalign path not configured. Please configure it using the config command.")]
+    ZipalignPathNotConfigured,
+
+    #[error("Apksigner path not configured. Please configure it using the config command.")]
+    ApksignerPathNotConfigured,
+
+    #[error("Path not found at {0}")]
+    PathNotFound(String),
+
+    #[error("Expected {0} to be a file")]
+    ExpectedFile(String),
+
+    #[error("Expected {0} to be a directory")]
+    ExpectedDirectory(String),
+
+    #[error("Expected {0} to have one of the extensions: {1}")]
+    ExpectedExtension(String, String),
+
+    #[error("Execution failed: {0}")]
+    ExecutionFailed(String),
+
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+
+    #[error("Config error: {0}")]
+    Config(String),
+}

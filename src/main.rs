@@ -6,7 +6,7 @@ mod utils;
 use clap::Parser;
 use cli::{Cli, executors};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
     match args.command {
@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("{}", value);
                     Ok(())
                 }
-                None => Err(format!("{} not configured.", key).into()),
+                None => anyhow::bail!("{} not configured.", key),
             },
 
             cli::ConfigAction::Set { key, value } => {

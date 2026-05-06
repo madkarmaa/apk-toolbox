@@ -1,5 +1,6 @@
 pub mod validators;
 
+use crate::constants::errors::AppError;
 use crate::utils::root_dir;
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
@@ -144,7 +145,7 @@ pub enum Config {
 }
 
 impl Config {
-    fn read_config_file() -> io::Result<AppConfig> {
+    fn read_config_file() -> Result<AppConfig, AppError> {
         let path = config_file_path();
         if !path.exists() {
             return Ok(AppConfig::default());
@@ -153,11 +154,11 @@ impl Config {
         let content = fs::read_to_string(path)?;
 
         let config: AppConfig =
-            toml::from_str(&content).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+            toml::from_str(&content).map_err(|e| AppError::Config(e.to_string()))?;
 
         config
             .validate()
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+            .map_err(|e| AppError::Config(e.to_string()))?;
 
         Ok(config)
     }

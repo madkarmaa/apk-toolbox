@@ -6,7 +6,8 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    utils::assert_is_directory(p, true).map_err(validation::Error::Custom)?;
+    utils::ensure_exists(p).map_err(validation::Error::Custom)?;
+    utils::ensure_directory(p).map_err(validation::Error::Custom)?;
 
     if path.ends_with("/bin") || path.ends_with("\\bin") {
         return Err(validation::Error::Custom(
@@ -21,7 +22,8 @@ pub fn validate_jar_path(path: &Option<String>) -> Result<(), validation::Error>
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    utils::assert_has_extension(p, &["jar"], true).map_err(validation::Error::Custom)?;
+    utils::ensure_exists(p).map_err(validation::Error::Custom)?;
+    utils::ensure_has_extension(p, &["jar"]).map_err(validation::Error::Custom)?;
 
     Ok(())
 }
@@ -30,10 +32,11 @@ pub fn validate_zipalign_path(path: &Option<String>) -> Result<(), validation::E
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    utils::assert_is_file(p, true).map_err(validation::Error::Custom)?;
+    utils::ensure_exists(p).map_err(validation::Error::Custom)?;
+    utils::ensure_file(p).map_err(validation::Error::Custom)?;
 
     if cfg!(windows) {
-        utils::assert_has_extension(p, &["exe"], true).map_err(validation::Error::Custom)?;
+        utils::ensure_has_extension(p, &["exe"]).map_err(validation::Error::Custom)?;
     }
 
     Ok(())
@@ -43,7 +46,7 @@ pub fn validate_keystore_path(path: &Option<String>) -> Result<(), validation::E
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
-    utils::assert_has_extension(p, &["jks"], false).map_err(validation::Error::Custom)?;
+    utils::ensure_has_extension(p, &["jks"]).map_err(validation::Error::Custom)?;
 
     Ok(())
 }

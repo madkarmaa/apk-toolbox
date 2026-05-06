@@ -24,7 +24,8 @@ pub fn compile(
     keystore_password: Option<String>,
     jobs: Option<usize>,
 ) -> Result<(), String> {
-    utils::assert_is_directory(&input_dir, true)?;
+    utils::ensure_exists(&input_dir)?;
+    utils::ensure_directory(&input_dir)?;
 
     let out_file = out_file.unwrap_or_else(|| {
         utils::current_dir()
@@ -32,7 +33,7 @@ pub fn compile(
             .with_extension("apk")
     });
 
-    utils::assert_has_extension(&out_file, &["apk"], false)?;
+    utils::ensure_has_extension(&out_file, &["apk"])?;
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
@@ -170,12 +171,13 @@ pub fn decompile(
     out_dir: Option<PathBuf>,
     jobs: Option<usize>,
 ) -> Result<(), String> {
-    utils::assert_has_extension(&input, &["apk", "xapk", "apks"], true)?;
+    utils::ensure_exists(&input)?;
+    utils::ensure_has_extension(&input, &["apk", "xapk", "apks"])?;
 
     let out_dir =
         out_dir.unwrap_or_else(|| utils::current_dir().join(input.file_stem().unwrap_or_default()));
 
-    utils::assert_is_directory(&out_dir, false)?;
+    utils::ensure_directory(&out_dir)?;
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 

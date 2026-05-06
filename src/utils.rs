@@ -42,47 +42,32 @@ pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
     Ok(())
 }
 
-pub fn assert_is_file(path: &Path, should_exist: bool) -> Result<(), String> {
+pub fn ensure_exists(path: &Path) -> Result<(), String> {
     if !path.exists() {
-        if should_exist {
-            return Err(format!("File not found at {}", path.to_string_lossy()));
-        }
-
-        return Ok(());
+        return Err(format!("Path not found at {}", path.to_string_lossy()));
     }
-
-    if !path.is_file() {
-        return Err(format!("Expected {} to be a file", path.to_string_lossy()));
-    }
-
     Ok(())
 }
 
-pub fn assert_is_directory(path: &Path, should_exist: bool) -> Result<(), String> {
-    if !path.exists() {
-        if should_exist {
-            return Err(format!("Directory not found at {}", path.to_string_lossy()));
-        }
-
-        return Ok(());
+pub fn ensure_file(path: &Path) -> Result<(), String> {
+    if path.exists() && !path.is_file() {
+        return Err(format!("Expected {} to be a file", path.to_string_lossy()));
     }
+    Ok(())
+}
 
-    if !path.is_dir() {
+pub fn ensure_directory(path: &Path) -> Result<(), String> {
+    if path.exists() && !path.is_dir() {
         return Err(format!(
             "Expected {} to be a directory",
             path.to_string_lossy()
         ));
     }
-
     Ok(())
 }
 
-pub fn assert_has_extension(
-    path: &Path,
-    extensions: &[&str],
-    should_exist: bool,
-) -> Result<(), String> {
-    assert_is_file(path, should_exist)?;
+pub fn ensure_has_extension(path: &Path, extensions: &[&str]) -> Result<(), String> {
+    ensure_file(path)?;
 
     if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {
         if extensions.contains(&ext) {

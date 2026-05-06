@@ -42,9 +42,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.target }})
 
-    env:
-      CROSS_VERSION: "0.2.5"
-
     steps:
       - uses: actions/checkout@v6
 
@@ -64,17 +61,22 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
 
+      - name: Get cross SHAs
+        id: cross-sha
+        run: |
+          echo "cross=$(git ls-remote https://github.com/cross-rs/cross HEAD | cut -f1)" >> $GITHUB_OUTPUT
+          echo "toolchains=$(git ls-remote https://github.com/cross-rs/cross-toolchains HEAD | cut -f1)" >> $GITHUB_OUTPUT
+
       - name: Cache cross
-        if: matrix.use_cross
         id: cache-cross
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/cross
-          key: ${{ runner.os }}-cross-${{ env.CROSS_VERSION }}-bin
+          key: ${{ runner.os }}-cross-git-${{ steps.cross-sha.outputs.cross }}-${{ steps.cross-sha.outputs.toolchains }}
 
       - name: Install cross
-        if: matrix.use_cross && steps.cache-cross.outputs.cache-hit != 'true'
-        run: cargo install cross --version ${{ env.CROSS_VERSION }}
+        if: steps.cache-cross.outputs.cache-hit != 'true'
+        run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build
         run: ${{ matrix.use_cross && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }}

@@ -43,6 +43,44 @@ pub fn compile(
     Ok(())
 }
 
+fn merge_apks(input: &PathBuf) -> Result<PathBuf, String> {
+    let java_home = Config::JavaHome
+        .get()
+        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
+
+    let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
+
+    let java_path = PathBuf::from(java_home)
+        .join("bin")
+        .join(java_executable_name);
+
+    let apkeditor_path = Config::ApkeditorPath
+        .get()
+        .ok_or_else(|| errors::APKEDITOR_PATH_NOT_CONFIGURED.to_string())?;
+
+    let output = input.with_extension("merged.apk");
+
+    utils::execute_blocking(
+        &java_path.to_string_lossy(),
+        &[
+            "-jar",
+            &apkeditor_path,
+            "m",
+            "-f",
+            "-clean-meta",
+            "-extractNativeLibs",
+            "true",
+            "-i",
+            &input.to_string_lossy(),
+            "-o",
+            &output.to_string_lossy(),
+        ],
+    )
+    .map_err(|err| err.to_string())?;
+
+    Ok(output)
+}
+
 pub fn decompile(
     input: PathBuf,
     out_dir: Option<PathBuf>,
@@ -61,12 +99,6 @@ pub fn decompile(
         .get()
         .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
 
-    println!(
-        "Decompiling {} to {}",
-        input.to_string_lossy(),
-        out_dir.to_string_lossy()
-    );
-
     let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
 
     let java_path = PathBuf::from(java_home)
@@ -76,6 +108,27 @@ pub fn decompile(
     let apktool_path = Config::ApktoolPath
         .get()
         .ok_or_else(|| errors::APKTOOL_PATH_NOT_CONFIGURED.to_string())?;
+
+    let input_extension = input
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .unwrap_or_default();
+
+    let mut input_merged: Option<PathBuf> = None;
+    if input_extension != "apk" {
+        println!(
+            "Merging base APK from {}...",
+            input_extension.to_uppercase()
+        );
+
+        input_merged = Some(merge_apks(&input)?);
+    }
+
+    println!(
+        "Decompiling {} to {}",
+        input.to_string_lossy(),
+        out_dir.to_string_lossy()
+    );
 
     utils::execute_blocking(
         &java_path.to_string_lossy(),
@@ -88,7 +141,9 @@ pub fn decompile(
             &jobs.to_string(),
             "-o",
             &out_dir.to_string_lossy(),
-            &input.to_string_lossy(),
+            &input_merged
+                .unwrap_or_else(|| input.clone())
+                .to_string_lossy(),
         ],
     )
     .map_err(|err| err.to_string())?;

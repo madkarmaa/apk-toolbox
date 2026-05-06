@@ -9,3 +9,6 @@ pub const JAVA_HOME_NOT_CONFIGURED: &str =
 
 pub const APKTOOL_PATH_NOT_CONFIGURED: &str =
     "Apktool path not configured. Please configure it using the config command.";
+
+pub const APKEDITOR_PATH_NOT_CONFIGURED: &str =
+    "Apkeditor path not configured. Please configure it using the config command.";

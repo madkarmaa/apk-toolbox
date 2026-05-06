@@ -64,6 +64,7 @@ jobs:
       - name: Get cross SHAs
         if: matrix.use_cross
         id: cross-sha
+        shell: bash
         run: |
           echo "cross=$(git ls-remote https://github.com/cross-rs/cross HEAD | cut -f1)" >> $GITHUB_OUTPUT
           echo "toolchains=$(git ls-remote https://github.com/cross-rs/cross-toolchains HEAD | cut -f1)" >> $GITHUB_OUTPUT

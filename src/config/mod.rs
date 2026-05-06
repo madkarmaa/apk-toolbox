@@ -191,24 +191,24 @@ impl Config {
             .write()
             .expect("Failed to write to config cache");
 
-        let old_config = cache.clone();
+        let mut new_config = cache.clone();
 
         match self {
-            Config::JavaHome => cache.java.home = Some(value.to_string()),
-            Config::ApktoolPath => cache.apktool.path = Some(value.to_string()),
-            Config::ApkeditorPath => cache.apkeditor.path = Some(value.to_string()),
-            Config::ApksignerPath => cache.apksigner.path = Some(value.to_string()),
-            Config::ZipalignPath => cache.zipalign.path = Some(value.to_string()),
-            Config::KeystorePath => cache.keystore.path = Some(value.to_string()),
-            Config::KeystoreAlias => cache.keystore.alias = Some(value.to_string()),
-            Config::KeystorePassword => cache.keystore.password = Some(value.to_string()),
+            Config::JavaHome => new_config.java.home = Some(value.to_string()),
+            Config::ApktoolPath => new_config.apktool.path = Some(value.to_string()),
+            Config::ApkeditorPath => new_config.apkeditor.path = Some(value.to_string()),
+            Config::ApksignerPath => new_config.apksigner.path = Some(value.to_string()),
+            Config::ZipalignPath => new_config.zipalign.path = Some(value.to_string()),
+            Config::KeystorePath => new_config.keystore.path = Some(value.to_string()),
+            Config::KeystoreAlias => new_config.keystore.alias = Some(value.to_string()),
+            Config::KeystorePassword => new_config.keystore.password = Some(value.to_string()),
         }
 
-        if let Err(e) = cache.validate() {
-            *cache = old_config;
+        if let Err(e) = new_config.validate() {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, e.to_string()));
         }
 
+        *cache = new_config;
         Self::save_to_disk(&cache)
     }
 

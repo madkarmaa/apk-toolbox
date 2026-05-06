@@ -12,7 +12,11 @@ pub fn compile(
 ) -> Result<(), String> {
     utils::assert_is_directory(&input_dir, true)?;
 
-    let out_file = out_file.unwrap_or_else(|| utils::current_dir().join("output.apk"));
+    let out_file = out_file.unwrap_or_else(|| {
+        utils::current_dir()
+            .join(input_dir.file_name().unwrap_or_default())
+            .with_extension("apk")
+    });
 
     utils::assert_has_extension(&out_file, &["apk"], false)?;
 

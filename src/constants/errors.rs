@@ -6,3 +6,6 @@ pub const KEYSTORE_PASSWORD_NOT_FOUND: &str = "Keystore password not found. Plea
 
 pub const JAVA_HOME_NOT_CONFIGURED: &str =
     "Java home not configured. Please configure it using the config command.";
+
+pub const APKTOOL_PATH_NOT_CONFIGURED: &str =
+    "Apktool path not configured. Please configure it using the config command.";

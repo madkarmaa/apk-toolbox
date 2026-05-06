@@ -4,43 +4,6 @@ use crate::utils;
 use std::env;
 use std::path::PathBuf;
 
-fn assert_is_apk(path: &PathBuf) -> Result<(), String> {
-    if !path.exists() {
-        return Err(format!(
-            "Executable not found at {}",
-            path.to_string_lossy()
-        ));
-    }
-
-    if !path.is_file() {
-        return Err(format!("Expected {} to be a file", path.to_string_lossy()));
-    }
-
-    if !path.extension().map_or(false, |ext| ext == "apk") {
-        return Err(format!(
-            "Expected {} to be an APK file",
-            path.to_string_lossy()
-        ));
-    }
-
-    Ok(())
-}
-
-fn assert_is_directory(path: &PathBuf, should_exist: bool) -> Result<(), String> {
-    if should_exist && !path.exists() {
-        return Err(format!("Directory not found at {}", path.to_string_lossy()));
-    }
-
-    if !path.is_dir() {
-        return Err(format!(
-            "Expected {} to be a directory",
-            path.to_string_lossy()
-        ));
-    }
-
-    Ok(())
-}
-
 pub fn compile(
     input_dir: PathBuf,
     out_dir: Option<PathBuf>,
@@ -48,12 +11,12 @@ pub fn compile(
     keystore_password: Option<String>,
     jobs: Option<usize>,
 ) -> Result<(), String> {
-    assert_is_directory(&input_dir, true)?;
+    utils::assert_is_directory(&input_dir, true)?;
 
     let out_dir =
         out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
-    assert_is_directory(&out_dir, false)?;
+    utils::assert_is_directory(&out_dir, false)?;
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
@@ -83,20 +46,50 @@ pub fn decompile(
     out_dir: Option<PathBuf>,
     jobs: Option<usize>,
 ) -> Result<(), String> {
-    assert_is_apk(&input)?;
+    utils::assert_has_extension(&input, &["apk", "xapk", "apks"], true)?;
 
     let out_dir =
         out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
-    assert_is_directory(&out_dir, false)?;
+    utils::assert_is_directory(&out_dir, false)?;
 
     let jobs = jobs.unwrap_or_else(|| num_cpus::get());
+
+    let java_home = Config::JavaHome
+        .get()
+        .ok_or_else(|| errors::JAVA_HOME_NOT_CONFIGURED.to_string())?;
 
     println!(
         "Decompiling {} to {}",
         input.to_string_lossy(),
         out_dir.to_string_lossy()
     );
+
+    let java_executable_name = if cfg!(windows) { "java.exe" } else { "java" };
+
+    let java_path = PathBuf::from(java_home)
+        .join("bin")
+        .join(java_executable_name);
+
+    let apktool_path = Config::ApktoolPath
+        .get()
+        .ok_or_else(|| errors::APKTOOL_PATH_NOT_CONFIGURED.to_string())?;
+
+    utils::execute_blocking(
+        &java_path.to_string_lossy(),
+        &[
+            "-jar",
+            &apktool_path,
+            "d",
+            "-f",
+            "--jobs",
+            &jobs.to_string(),
+            "-o",
+            &out_dir.to_string_lossy(),
+            &input.to_string_lossy(),
+        ],
+    )
+    .map_err(|err| err.to_string())?;
 
     Ok(())
 }

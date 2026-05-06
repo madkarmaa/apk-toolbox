@@ -6,6 +6,7 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
+num_cpus = "1.17.0"
 serde = "1.0.228"
 serde_valid = { version = "2.0.1", features = ["toml"] }
 strum = "0.28.0"

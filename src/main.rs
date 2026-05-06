@@ -15,13 +15,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             out_dir,
             keystore_alias,
             keystore_password,
+            jobs,
         } => {
-            executors::compile(input_dir, out_dir, keystore_alias, keystore_password)?;
+            executors::compile(input_dir, out_dir, keystore_alias, keystore_password, jobs)?;
             Ok(())
         }
 
-        cli::Commands::Decompile { input, out_dir } => {
-            executors::decompile(input, out_dir)?;
+        cli::Commands::Decompile {
+            input,
+            out_dir,
+            jobs,
+        } => {
+            executors::decompile(input, out_dir, jobs)?;
             Ok(())
         }
 

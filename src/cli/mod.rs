@@ -17,6 +17,9 @@ pub struct Cli {
     pub command: Commands,
 }
 
+// TODO: check keystore alias is not empty
+// TODO: check keystore password is at least 6 characters
+
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Compile a smali directory into a ready-to-use APK file.
@@ -33,6 +36,10 @@ pub enum Commands {
         /// The password for the keystore.
         #[arg(short = 'p', long)]
         keystore_password: Option<String>,
+
+        /// The number of parallel jobs to use for compilation. If not specified, the number of CPU cores will be used.
+        #[arg(short = 'j', long)]
+        jobs: Option<usize>,
     },
 
     /// Decompile an APK file into a smali directory.
@@ -41,6 +48,10 @@ pub enum Commands {
         input: PathBuf,
         /// The output directory for the decompiled smali files. If not specified, a directory with the same name as the APK will be created in the current directory.
         out_dir: Option<PathBuf>,
+
+        /// The number of parallel jobs to use for decompilation. If not specified, the number of CPU cores will be used.
+        #[arg(short = 'j', long)]
+        jobs: Option<usize>,
     },
 
     /// Generate a keystore file for signing APKs.

@@ -46,6 +46,7 @@ pub fn compile(
     out_dir: Option<PathBuf>,
     keystore_alias: Option<String>,
     keystore_password: Option<String>,
+    jobs: Option<usize>,
 ) -> Result<(), String> {
     assert_is_directory(&input_dir, true)?;
 
@@ -53,6 +54,8 @@ pub fn compile(
         out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     assert_is_directory(&out_dir, false)?;
+
+    let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
     let keystore_path = Config::KeystorePath
         .get()
@@ -75,13 +78,19 @@ pub fn compile(
     Ok(())
 }
 
-pub fn decompile(input: PathBuf, out_dir: Option<PathBuf>) -> Result<(), String> {
+pub fn decompile(
+    input: PathBuf,
+    out_dir: Option<PathBuf>,
+    jobs: Option<usize>,
+) -> Result<(), String> {
     assert_is_apk(&input)?;
 
     let out_dir =
         out_dir.unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     assert_is_directory(&out_dir, false)?;
+
+    let jobs = jobs.unwrap_or_else(|| num_cpus::get());
 
     println!(
         "Decompiling {} to {}",

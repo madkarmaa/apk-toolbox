@@ -62,12 +62,14 @@ jobs:
         run: sudo apt-get install -y musl-tools
 
       - name: Get cross SHAs
+        if: matrix.use_cross
         id: cross-sha
         run: |
           echo "cross=$(git ls-remote https://github.com/cross-rs/cross HEAD | cut -f1)" >> $GITHUB_OUTPUT
           echo "toolchains=$(git ls-remote https://github.com/cross-rs/cross-toolchains HEAD | cut -f1)" >> $GITHUB_OUTPUT
 
       - name: Cache cross
+        if: matrix.use_cross
         id: cache-cross
         uses: actions/cache@v5
         with:
@@ -75,7 +77,7 @@ jobs:
           key: ${{ runner.os }}-cross-git-${{ steps.cross-sha.outputs.cross }}-${{ steps.cross-sha.outputs.toolchains }}
 
       - name: Install cross
-        if: steps.cache-cross.outputs.cache-hit != 'true'
+        if: matrix.use_cross && steps.cache-cross.outputs.cache-hit != 'true'
         run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build

@@ -43,8 +43,12 @@ pub fn execute_blocking(program: &str, args: &[&str]) -> io::Result<()> {
 }
 
 pub fn assert_is_file(path: &Path, should_exist: bool) -> Result<(), String> {
-    if should_exist && !path.exists() {
-        return Err(format!("File not found at {}", path.to_string_lossy()));
+    if !path.exists() {
+        if should_exist {
+            return Err(format!("File not found at {}", path.to_string_lossy()));
+        }
+
+        return Ok(());
     }
 
     if !path.is_file() {

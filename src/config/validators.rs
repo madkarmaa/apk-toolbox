@@ -9,7 +9,8 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
     utils::ensure_exists(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
     utils::ensure_directory(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
 
-    if path.ends_with("/bin") || path.ends_with("\\bin") {
+    let trimmed_path = path.trim_end_matches(['/', '\\']);
+    if trimmed_path.ends_with("/bin") || trimmed_path.ends_with("\\bin") {
         return Err(validation::Error::Custom(
             "Java home must not end in /bin segment".to_string(),
         ));

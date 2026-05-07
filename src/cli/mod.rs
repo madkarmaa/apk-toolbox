@@ -1,4 +1,4 @@
-pub mod executors;
+pub mod handlers;
 
 use crate::config::Config;
 use clap::{Parser, Subcommand};

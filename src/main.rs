@@ -4,7 +4,7 @@ mod constants;
 mod utils;
 
 use clap::Parser;
-use cli::{Cli, executors};
+use cli::{Cli, handlers};
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -18,7 +18,7 @@ fn main() -> anyhow::Result<()> {
             jobs,
             jvm_heap,
         } => {
-            executors::compile(
+            handlers::compile(
                 input_dir,
                 out_file,
                 keystore_alias,
@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<()> {
             jobs,
             jvm_heap,
         } => {
-            executors::decompile(input, out_dir, jobs, jvm_heap)?;
+            handlers::decompile(input, out_dir, jobs, jvm_heap)?;
             Ok(())
         }
 
@@ -43,7 +43,7 @@ fn main() -> anyhow::Result<()> {
             keystore_alias,
             keystore_password,
         } => {
-            executors::keygen(keystore_alias, keystore_password)?;
+            handlers::keygen(keystore_alias, keystore_password)?;
             Ok(())
         }
 

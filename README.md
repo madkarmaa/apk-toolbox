@@ -30,3 +30,7 @@ PowerShell:
 
 4. Accept the license agreements
 5. The Android SDK Build Tools will be downloaded in `./build-tools/<VERSION>`
+
+## Known issues
+
+1. On Windows CMD, configuring a directory ending with a `\` while wrapping it with double quotes `"` (such as `"C:\Some\Example\Path\"`) will result in a `Path not found` error.

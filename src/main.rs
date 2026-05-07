@@ -48,7 +48,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         cli::Commands::Config { action } => match action {
-            cli::ConfigAction::Get { key } => match key.get() {
+            cli::ConfigAction::Get { key } => match key.get()? {
                 Some(value) => {
                     println!("{}", value);
                     Ok(())

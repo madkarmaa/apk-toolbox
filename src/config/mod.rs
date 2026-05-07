@@ -158,24 +158,25 @@ impl Config {
 
         config
             .validate()
-            .map_err(|e| AppError::Config(e.to_string()))?;
+            .map_err(|e| AppError::Config(format_validation_error(&e)))?;
 
         Ok(config)
     }
 
-    fn cache() -> &'static RwLock<AppConfig> {
-        CONFIG_CACHE.get_or_init(|| {
-            let config = Self::read_config_file().unwrap_or_default();
-            RwLock::new(config)
-        })
+    fn cache() -> Result<&'static RwLock<AppConfig>, AppError> {
+        if let Some(cache) = CONFIG_CACHE.get() {
+            return Ok(cache);
+        }
+        let config = Self::read_config_file()?;
+        Ok(CONFIG_CACHE.get_or_init(|| RwLock::new(config)))
     }
 
-    pub fn get(&self) -> Option<String> {
-        let cache = Self::cache()
+    pub fn get(&self) -> Result<Option<String>, AppError> {
+        let cache = Self::cache()?
             .read()
             .expect("Failed to read from config cache");
 
-        match self {
+        Ok(match self {
             Config::JavaHome => cache.java.home.clone(),
             Config::ApktoolPath => cache.apktool.path.clone(),
             Config::ApkeditorPath => cache.apkeditor.path.clone(),
@@ -184,11 +185,11 @@ impl Config {
             Config::KeystorePath => cache.keystore.path.clone(),
             Config::KeystoreAlias => cache.keystore.alias.clone(),
             Config::KeystorePassword => cache.keystore.password.clone(),
-        }
+        })
     }
 
-    pub fn set(&self, value: &str) -> io::Result<()> {
-        let mut cache = Self::cache()
+    pub fn set(&self, value: &str) -> Result<(), AppError> {
+        let mut cache = Self::cache()?
             .write()
             .expect("Failed to write to config cache");
 
@@ -206,18 +207,15 @@ impl Config {
         }
 
         if let Err(err) = new_config.validate() {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format_validation_error(&err),
-            ));
+            return Err(AppError::Config(format_validation_error(&err)));
         }
 
         *cache = new_config;
-        Self::save_to_disk(&cache)
+        Self::save_to_disk(&cache).map_err(|e| AppError::Config(e.to_string()))
     }
 
-    pub fn delete(&self) -> io::Result<()> {
-        let mut cache = Self::cache()
+    pub fn delete(&self) -> Result<(), AppError> {
+        let mut cache = Self::cache()?
             .write()
             .expect("Failed to write to config cache");
 
@@ -232,7 +230,7 @@ impl Config {
             Config::KeystorePassword => cache.keystore.password = None,
         }
 
-        Self::save_to_disk(&cache)
+        Self::save_to_disk(&cache).map_err(|e| AppError::Config(e.to_string()))
     }
 
     fn save_to_disk(config: &AppConfig) -> io::Result<()> {

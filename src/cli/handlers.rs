@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 fn get_java_bin(name: &str) -> Result<PathBuf, errors::AppError> {
     let java_home = Config::JavaHome
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::JavaHomeNotConfigured)?;
 
     let executable_name = if cfg!(windows) {
@@ -41,27 +41,27 @@ pub fn compile(
     let java_path = get_java_bin("java")?;
 
     let apktool_path = Config::ApktoolPath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::ApktoolPathNotConfigured)?;
 
     let zipalign_path = Config::ZipalignPath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::ZipalignPathNotConfigured)?;
 
     let apksigner_path = Config::ApksignerPath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::ApksignerPathNotConfigured)?;
 
     let keystore_path = Config::KeystorePath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::KeystorePathExpected)?;
 
     let keystore_alias = keystore_alias
-        .or_else(|| Config::KeystoreAlias.get())
+        .or_else(|| Config::KeystoreAlias.get().unwrap_or_default())
         .ok_or_else(|| errors::AppError::KeystoreAliasNotFound)?;
 
     let keystore_password = keystore_password
-        .or_else(|| Config::KeystorePassword.get())
+        .or_else(|| Config::KeystorePassword.get().unwrap_or_default())
         .ok_or_else(|| errors::AppError::KeystorePasswordNotFound)?;
 
     println!(
@@ -140,7 +140,7 @@ fn merge_apks(input: &PathBuf, jvm_heap: &String) -> anyhow::Result<PathBuf> {
     let java_path = get_java_bin("java")?;
 
     let apkeditor_path = Config::ApkeditorPath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::ApkeditorPathNotConfigured)?;
 
     let output = input.with_extension("merged.apk");
@@ -185,7 +185,7 @@ pub fn decompile(
     let java_path = get_java_bin("java")?;
 
     let apktool_path = Config::ApktoolPath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::ApktoolPathNotConfigured)?;
 
     let input_extension = input
@@ -237,15 +237,15 @@ pub fn keygen(
     keystore_password: Option<String>,
 ) -> anyhow::Result<()> {
     let keystore_path = Config::KeystorePath
-        .get()
+        .get()?
         .ok_or_else(|| errors::AppError::KeystorePathExpected)?;
 
     let keystore_alias = keystore_alias
-        .or_else(|| Config::KeystoreAlias.get())
+        .or_else(|| Config::KeystoreAlias.get().unwrap_or_default())
         .ok_or_else(|| errors::AppError::KeystoreAliasNotFound)?;
 
     let keystore_password = keystore_password
-        .or_else(|| Config::KeystorePassword.get())
+        .or_else(|| Config::KeystorePassword.get().unwrap_or_default())
         .ok_or_else(|| errors::AppError::KeystorePasswordNotFound)?;
 
     let keytool_path = get_java_bin("keytool")?;

@@ -124,4 +124,7 @@ pub enum ConfigAction {
         /// The configuration key to delete.
         key: Config,
     },
+
+    /// Show where the configuration file is located.
+    Location,
 }

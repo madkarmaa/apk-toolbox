@@ -17,7 +17,7 @@ use validators::*;
 pub const CONFIG_FILE_NAME: &str = concat!(env!("CARGO_PKG_NAME"), ".config.toml");
 static CONFIG_CACHE: OnceLock<RwLock<AppConfig>> = OnceLock::new();
 
-fn config_file_path() -> PathBuf {
+pub fn config_file_path() -> PathBuf {
     root_dir().join(CONFIG_FILE_NAME)
 }
 

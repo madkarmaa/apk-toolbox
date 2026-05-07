@@ -65,6 +65,11 @@ fn main() -> anyhow::Result<()> {
                 key.delete()?;
                 Ok(())
             }
+
+            cli::ConfigAction::Location => {
+                println!("{}", config::config_file_path().display());
+                Ok(())
+            }
         },
     }
 }

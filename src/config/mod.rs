@@ -212,6 +212,10 @@ impl Config {
             Config::KeystorePassword => new_config.keystore.password = Some(value.to_string()),
         }
 
+        new_config
+            .validate()
+            .map_err(|e| AppError::Config(format_validation_error(&e)))?;
+
         *cache = new_config;
         Self::save_to_disk(&cache).map_err(|e| AppError::Config(e.to_string()))
     }

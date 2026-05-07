@@ -42,6 +42,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Compile a smali directory into a ready-to-use APK file.
+    #[command(visible_alias = "c")]
     Compile {
         /// The input smali directory.
         input_dir: PathBuf,
@@ -67,6 +68,7 @@ pub enum Commands {
     },
 
     /// Decompile an APK file into a smali directory.
+    #[command(visible_alias = "d")]
     Decompile {
         /// The input APK file.
         input: PathBuf,
@@ -84,6 +86,7 @@ pub enum Commands {
     },
 
     /// Generate a keystore file for signing APKs.
+    #[command(visible_alias = "k")]
     Keygen {
         /// The keystore alias to use.
         #[arg(short = 'a', long, value_parser = validate_keystore_alias)]
@@ -95,6 +98,7 @@ pub enum Commands {
     },
 
     /// Manage configuration settings.
+    #[command(visible_alias = "cfg")]
     Config {
         #[command(subcommand)]
         action: ConfigAction,
@@ -110,6 +114,7 @@ pub enum ConfigAction {
     },
 
     /// Set the value of a configuration key.
+    #[command(visible_aliases = ["put", "add", "update"])]
     Set {
         /// The configuration key to set.
         key: Config,
@@ -120,11 +125,13 @@ pub enum ConfigAction {
     },
 
     /// Delete a configuration key.
+    #[command(visible_aliases = ["del", "rm", "unset", "remove"])]
     Delete {
         /// The configuration key to delete.
         key: Config,
     },
 
     /// Show where the configuration file is located.
+    #[command(visible_alias = "loc")]
     Location,
 }

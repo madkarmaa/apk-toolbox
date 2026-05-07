@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::constants::errors;
 use crate::utils;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn get_java_bin(name: &str) -> Result<PathBuf, errors::AppError> {
     let java_home = Config::JavaHome
@@ -54,6 +54,8 @@ pub fn compile(
     let keystore_path = Config::KeystorePath
         .get()?
         .ok_or_else(|| errors::AppError::KeystorePathExpected)?;
+
+    utils::ensure_exists(Path::new(&keystore_path))?;
 
     let keystore_alias = keystore_alias
         .or_else(|| Config::KeystoreAlias.get().unwrap_or_default())

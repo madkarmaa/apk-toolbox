@@ -20,24 +20,13 @@ Use either the `help <cmd>` command or the `--help` (`-h`) flag. The program wil
 3. Run
 
 ```shell
-./cmdline-tools/bin/sdkmanager --sdk_root="." --list | grep "build-tools" | sort -t';' -k2 -Vr | head -1
+./cmdline-tools/bin/sdkmanager --sdk_root="." $(./cmdline-tools/bin/sdkmanager --sdk_root="." --list | grep "build-tools" | sort -t';' -k2 -Vr | head -1 | awk '{print $1}')
 ```
 
 PowerShell:
-```powershell
-./cmdline-tools/bin/sdkmanager --sdk_root="." --list | Select-String "build-tools" | Sort-Object { [version](($_ -replace '.*build-tools;(\S+).*','$1') -replace '-rc\d+','') } -Descending | Select-Object -First 1
+```
+./cmdline-tools/bin/sdkmanager --sdk_root="." (./cmdline-tools/bin/sdkmanager --sdk_root="." --list | Select-String "build-tools" | Sort-Object { [version](($_ -replace '.*build-tools;(\S+).*','$1') -replace '-rc\d+','') } -Descending | Select-Object -First 1 | ForEach-Object { ($_ -split '\|')[0].Trim() })
 ```
 
-An output like this should appear
-```
-build-tools;37.0.0-rc2 | 37.0.0 rc2 | Android SDK Build-Tools 37-rc2 | build-tools/37.0.0-rc2
-```
-
-4. Take note of the `build-tools;<VERSION>` string, such as `build-tools;37.0.0-rc2`
-5. Run
-
-```shell
-./cmdline-tools/bin/sdkmanager --sdk_root="." "build-tools;<VERSION>"
-```
-
-6. The Android SDK Build Tools will be downloaded in `./build-tools/<VERSION>`
+4. Accept the license agreements
+5. The Android SDK Build Tools will be downloaded in `./build-tools/<VERSION>`

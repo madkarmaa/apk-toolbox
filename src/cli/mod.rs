@@ -29,8 +29,21 @@ fn validate_keystore_password(v: &str) -> Result<String, String> {
 
 #[derive(Parser, Debug)]
 #[command(
+    about = env!("CARGO_PKG_DESCRIPTION"),
     version = env!("CARGO_PKG_VERSION"),
-    about = env!("CARGO_PKG_DESCRIPTION")
+    long_version = concat!(
+        env!("CARGO_PKG_VERSION"),
+        "+",
+        env!("VERGEN_GIT_SHA"),
+        " (built on ",
+        env!("VERGEN_BUILD_DATE"),
+        ")\n\n",
+        "Repository: ",
+        env!("CARGO_PKG_REPOSITORY"),
+        "\nIssue tracker: ",
+        env!("CARGO_PKG_REPOSITORY"),
+        "/issues"
+    )
 )]
 pub struct Cli {
     #[command(subcommand)]

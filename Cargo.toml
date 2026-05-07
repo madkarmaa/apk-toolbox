@@ -2,7 +2,10 @@
 name = "apk-toolbox"
 description = "Compile and decompile APK files with ease, no need to remember complex commands."
 version = "0.0.1"
+repository = "https://github.com/madkarmaa/apk-toolbox"
+homepage = "https://github.com/madkarmaa/apk-toolbox"
 edition = "2024"
+build = "build.rs"
 
 [dependencies]
 anyhow = "1.0.102"
@@ -15,3 +18,6 @@ strum = "0.28.0"
 strum_macros = "0.28.0"
 thiserror = "2.0.18"
 toml = "1.1.2"
+
+[build-dependencies]
+vergen-gitcl = { version = "9.1.0", features = ["build", "cargo", "rustc"] }

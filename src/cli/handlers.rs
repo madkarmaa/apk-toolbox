@@ -23,7 +23,6 @@ pub fn compile(
     keystore_alias: Option<String>,
     keystore_password: Option<String>,
     jobs: Option<usize>,
-    jvm_heap: String,
 ) -> anyhow::Result<()> {
     utils::ensure_exists(&input_dir)?;
     utils::ensure_directory(&input_dir)?;
@@ -77,7 +76,6 @@ pub fn compile(
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apktool_path,
             "b",
@@ -113,7 +111,6 @@ pub fn compile(
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apksigner_path,
             "sign",
@@ -136,7 +133,7 @@ pub fn compile(
     Ok(())
 }
 
-fn merge_apks(input: &PathBuf, jvm_heap: &String) -> anyhow::Result<PathBuf> {
+fn merge_apks(input: &PathBuf) -> anyhow::Result<PathBuf> {
     let java_path = get_java_bin("java")?;
 
     let apkeditor_path = Config::ApkeditorPath
@@ -148,7 +145,6 @@ fn merge_apks(input: &PathBuf, jvm_heap: &String) -> anyhow::Result<PathBuf> {
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apkeditor_path,
             "m",
@@ -170,7 +166,6 @@ pub fn decompile(
     mut input: PathBuf,
     out_dir: Option<PathBuf>,
     jobs: Option<usize>,
-    jvm_heap: String,
 ) -> anyhow::Result<()> {
     utils::ensure_exists(&input)?;
     utils::ensure_has_extension(&input, &["apk", "xapk", "apks"])?;
@@ -195,7 +190,7 @@ pub fn decompile(
 
     if input_extension != "apk" {
         println!("Detected split APK to merge");
-        input = merge_apks(&input, &jvm_heap)?;
+        input = merge_apks(&input)?;
         println!("Merged APK created at {}", input.to_string_lossy());
     }
 
@@ -214,7 +209,6 @@ pub fn decompile(
     utils::execute_blocking(
         &java_path.to_string_lossy(),
         &[
-            &format!("-Xmx{}", jvm_heap),
             "-jar",
             &apktool_path,
             "d",

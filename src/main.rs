@@ -20,16 +20,8 @@ fn main() -> anyhow::Result<()> {
             keystore_alias,
             keystore_password,
             jobs,
-            jvm_heap,
         } => {
-            handlers::compile(
-                input_dir,
-                out_file,
-                keystore_alias,
-                keystore_password,
-                jobs,
-                jvm_heap,
-            )?;
+            handlers::compile(input_dir, out_file, keystore_alias, keystore_password, jobs)?;
             Ok(())
         }
 
@@ -37,9 +29,8 @@ fn main() -> anyhow::Result<()> {
             input,
             out_dir,
             jobs,
-            jvm_heap,
         } => {
-            handlers::decompile(input, out_dir, jobs, jvm_heap)?;
+            handlers::decompile(input, out_dir, jobs)?;
             Ok(())
         }
 

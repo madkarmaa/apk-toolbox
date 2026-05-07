@@ -156,10 +156,6 @@ impl Config {
         let config: AppConfig =
             toml::from_str(&content).map_err(|e| AppError::Config(e.to_string()))?;
 
-        config
-            .validate()
-            .map_err(|e| AppError::Config(format_validation_error(&e)))?;
-
         Ok(config)
     }
 
@@ -169,6 +165,16 @@ impl Config {
         }
         let config = Self::read_config_file()?;
         Ok(CONFIG_CACHE.get_or_init(|| RwLock::new(config)))
+    }
+
+    pub fn validate_all() -> Result<(), AppError> {
+        let cache = Self::cache()?
+            .read()
+            .expect("Failed to read from config cache");
+
+        cache
+            .validate()
+            .map_err(|e| AppError::Config(format_validation_error(&e)))
     }
 
     pub fn get(&self) -> Result<Option<String>, AppError> {
@@ -204,10 +210,6 @@ impl Config {
             Config::KeystorePath => new_config.keystore.path = Some(value.to_string()),
             Config::KeystoreAlias => new_config.keystore.alias = Some(value.to_string()),
             Config::KeystorePassword => new_config.keystore.password = Some(value.to_string()),
-        }
-
-        if let Err(err) = new_config.validate() {
-            return Err(AppError::Config(format_validation_error(&err)));
         }
 
         *cache = new_config;

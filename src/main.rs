@@ -9,6 +9,10 @@ use cli::{Cli, handlers};
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
+    if !matches!(args.command, cli::Commands::Config { .. }) {
+        config::Config::validate_all()?;
+    }
+
     match args.command {
         cli::Commands::Compile {
             input_dir,

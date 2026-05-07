@@ -29,8 +29,6 @@ fn validate_keystore_password(v: &str) -> Result<String, String> {
 
 #[derive(Parser, Debug)]
 #[command(
-    name = env!("CARGO_PKG_NAME"),
-    bin_name = env!("CARGO_PKG_NAME"),
     version = env!("CARGO_PKG_VERSION"),
     about = env!("CARGO_PKG_DESCRIPTION")
 )]

@@ -1,7 +1,7 @@
 pub mod validators;
 
 use crate::constants::errors::AppError;
-use crate::utils::root_dir;
+use crate::utils::{format_validation_error, root_dir};
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use serde_valid::Validate;
@@ -205,8 +205,11 @@ impl Config {
             Config::KeystorePassword => new_config.keystore.password = Some(value.to_string()),
         }
 
-        if let Err(e) = new_config.validate() {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, e.to_string()));
+        if let Err(err) = new_config.validate() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format_validation_error(&err),
+            ));
         }
 
         *cache = new_config;

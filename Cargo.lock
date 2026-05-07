@@ -75,6 +75,7 @@ dependencies = [
  "clap",
  "num_cpus",
  "serde",
+ "serde_json",
  "serde_valid",
  "strum",
  "strum_macros",

@@ -88,3 +88,35 @@ pub fn ensure_has_extension(path: &Path, extensions: &[&str]) -> Result<(), AppE
         extensions.join(", "),
     ))
 }
+
+pub fn format_validation_error(error: &serde_valid::validation::Errors) -> String {
+    let json_str = error.to_string();
+    if let Ok(v) = serde_json::from_str::<serde_json::Value>(&json_str) {
+        let mut messages = Vec::new();
+        extract_errors(&v, &mut messages);
+        if !messages.is_empty() {
+            return messages.join(", ");
+        }
+    }
+    json_str
+}
+
+pub fn extract_errors(value: &serde_json::Value, messages: &mut Vec<String>) {
+    match value {
+        serde_json::Value::Object(map) => {
+            if let Some(serde_json::Value::Array(errors)) = map.get("errors") {
+                for error in errors {
+                    if let Some(s) = error.as_str() {
+                        messages.push(s.to_string());
+                    }
+                }
+            }
+            if let Some(serde_json::Value::Object(props)) = map.get("properties") {
+                for (_, val) in props {
+                    extract_errors(val, messages);
+                }
+            }
+        }
+        _ => {}
+    }
+}

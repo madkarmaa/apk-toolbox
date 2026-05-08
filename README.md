@@ -10,12 +10,11 @@ Use either the `help <cmd>` command or the `--help` (`-h`) flag. The program wil
 2. keytool (usually installed along Java)
 3. [Apktool](https://github.com/iBotPeaches/Apktool/releases/latest)
 4. [APKEditor](https://github.com/REAndroid/APKEditor/releases/latest)
-5. zipalign (part of the Android SDK Build Tools)
-6. apksigner (part of the Android SDK Build Tools)
+5. Android SDK Build Tools
 
 ### Android SDK Build Tools without Android Studio
 
-1. Download the Command Line Tools [here](https://developer.android.com/studio#command-line-tools-only)
+1. Download the [Android SDK Command Line Tools](https://developer.android.com/studio#command-line-tools-only)
 2. Unzip the downloaded file
 3. Run
 

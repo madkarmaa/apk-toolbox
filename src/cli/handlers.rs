@@ -43,13 +43,17 @@ pub fn compile(
         .get()?
         .ok_or_else(|| errors::AppError::ApktoolPathNotConfigured)?;
 
-    let zipalign_path = Config::ZipalignPath
+    let build_tools_path = Config::BuildToolsPath
         .get()?
-        .ok_or_else(|| errors::AppError::ZipalignPathNotConfigured)?;
+        .ok_or_else(|| errors::AppError::BuildToolsPathNotConfigured)?;
 
-    let apksigner_path = Config::ApksignerPath
-        .get()?
-        .ok_or_else(|| errors::AppError::ApksignerPathNotConfigured)?;
+    let build_tools_dir = Path::new(&build_tools_path);
+    let zipalign_path = if cfg!(windows) {
+        build_tools_dir.join("zipalign.exe")
+    } else {
+        build_tools_dir.join("zipalign")
+    };
+    let apksigner_path = build_tools_dir.join("lib").join("apksigner.jar");
 
     let keystore_path = Config::KeystorePath
         .get()?
@@ -97,7 +101,7 @@ pub fn compile(
     println!("Aligning APK with zipalign");
 
     utils::execute_blocking(
-        &zipalign_path,
+        &zipalign_path.to_string_lossy(),
         &[
             "-f",
             "-v",
@@ -114,7 +118,7 @@ pub fn compile(
         &java_path.to_string_lossy(),
         &[
             "-jar",
-            &apksigner_path,
+            &apksigner_path.to_string_lossy(),
             "sign",
             "--ks",
             &keystore_path,

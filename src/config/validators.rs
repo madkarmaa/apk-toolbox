@@ -30,17 +30,25 @@ pub fn validate_jar_path(path: &Option<String>) -> Result<(), validation::Error>
     Ok(())
 }
 
-pub fn validate_zipalign_path(path: &Option<String>) -> Result<(), validation::Error> {
+pub fn validate_build_tools_path(path: &Option<String>) -> Result<(), validation::Error> {
     let Some(path) = path else { return Ok(()) };
     let p = Path::new(path);
 
     utils::ensure_exists(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
-    utils::ensure_file(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
+    utils::ensure_directory(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
 
-    if cfg!(windows) {
-        utils::ensure_has_extension(p, &["exe"])
-            .map_err(|e| validation::Error::Custom(e.to_string()))?;
-    }
+    let zipalign_path = if cfg!(windows) {
+        p.join("zipalign.exe")
+    } else {
+        p.join("zipalign")
+    };
+
+    utils::ensure_exists(&zipalign_path)
+        .map_err(|_| validation::Error::Custom(format!("zipalign not found in {}", path)))?;
+
+    let apksigner_path = p.join("lib").join("apksigner.jar");
+    utils::ensure_exists(&apksigner_path)
+        .map_err(|_| validation::Error::Custom(format!("apksigner.jar not found in {}/lib", path)))?;
 
     Ok(())
 }

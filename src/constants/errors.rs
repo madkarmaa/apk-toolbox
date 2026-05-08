@@ -24,11 +24,8 @@ pub enum AppError {
     #[error("Apkeditor path not configured. Please configure it using the config command.")]
     ApkeditorPathNotConfigured,
 
-    #[error("Zipalign path not configured. Please configure it using the config command.")]
-    ZipalignPathNotConfigured,
-
-    #[error("Apksigner path not configured. Please configure it using the config command.")]
-    ApksignerPathNotConfigured,
+    #[error("Android build tools path not configured. Please configure it using the config command.")]
+    BuildToolsPathNotConfigured,
 
     #[error("Path not found at {0}")]
     PathNotFound(String),

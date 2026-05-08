@@ -16,6 +16,26 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
         ));
     }
 
+    let bin_dir = p.join("bin");
+
+    let java_bin = if cfg!(windows) {
+        bin_dir.join("java.exe")
+    } else {
+        bin_dir.join("java")
+    };
+
+    utils::ensure_exists(&java_bin)
+        .map_err(|_| validation::Error::Custom(format!("java executable not found in {}/bin", path)))?;
+
+    let keytool_bin = if cfg!(windows) {
+        bin_dir.join("keytool.exe")
+    } else {
+        bin_dir.join("keytool")
+    };
+
+    utils::ensure_exists(&keytool_bin)
+        .map_err(|_| validation::Error::Custom(format!("keytool executable not found in {}/bin", path)))?;
+
     Ok(())
 }
 

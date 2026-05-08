@@ -1,6 +1,6 @@
 [package]
 name = "apk-toolbox"
-description = "Compile and decompile APK files with ease, no need to remember complex commands."
+description = "Compile and decompile Android applications with ease, no need to remember complex commands."
 version = "1.0.0"
 repository = "https://github.com/madkarmaa/apk-toolbox"
 homepage = "https://github.com/madkarmaa/apk-toolbox"

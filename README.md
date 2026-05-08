@@ -12,6 +12,9 @@ It also provides full support for handling split APK formats, such as `.xapk` an
 
 [![Windows x64](https://custom-icon-badges.demolab.com/badge/Windows-x64-357EC7?style=for-the-badge&logo=windows11&logoColor=white)](https://github.com/madkarmaa/apk-toolbox/releases/latest/download/apk-toolbox-windows-x64.exe) [![Android arm64-v8a](https://img.shields.io/badge/Android-arm64%20v8a-34A853?style=for-the-badge&logo=android&logoColor=white)](https://github.com/madkarmaa/apk-toolbox/releases/latest/download/apk-toolbox-android-arm64) [![Linux x64 (GCC)](https://img.shields.io/badge/Linux-x64%20GCC-F4BC00?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/madkarmaa/apk-toolbox/releases/latest/download/apk-toolbox-linux-x64) [![Linux x64 (static)](https://img.shields.io/badge/Linux-x64%20static-F4BC00?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/madkarmaa/apk-toolbox/releases/latest/download/apk-toolbox-linux-x64-musl) [![MacOS (Apple silicon)](https://img.shields.io/badge/MacOS-Apple%20silicon-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/madkarmaa/apk-toolbox/releases/latest/download/apk-toolbox-macos-arm64)
 
+> [!NOTE]
+> The Android binary is designed to run in a [Termux](https://termux.dev) environment.
+
 ## Requirements
 
 1. Java JDK [> 11](https://apktool.org/docs/build#requirements)
@@ -55,7 +58,7 @@ cargo build --release --locked
 ```
 
 > [!NOTE]
-> To build for Android (`aarch64-linux-android`), you must have [Docker](https://www.docker.com) running. Install and use [`cross`](https://github.com/cross-rs/cross) instead of `cargo`
+> To build for Android (`aarch64-linux-android`), you must have [Docker](https://www.docker.com) running. Install and use [`cross`](https://github.com/cross-rs/cross) instead of `cargo`.
 > ```shell
 > cargo install cross --git https://github.com/cross-rs/cross
 > cross build --release --target aarch64-linux-android --locked

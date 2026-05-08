@@ -59,7 +59,8 @@ pub fn compile(
         .get()?
         .ok_or_else(|| errors::AppError::KeystorePathExpected)?;
 
-    utils::ensure_exists(Path::new(&keystore_path))?;
+    utils::ensure_exists(Path::new(&keystore_path))
+        .map_err(|_| errors::AppError::KeystoreNotFound(keystore_path.to_string()))?;
 
     let keystore_alias = keystore_alias
         .or_else(|| Config::KeystoreAlias.get().unwrap_or_default())

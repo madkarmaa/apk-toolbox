@@ -5,6 +5,9 @@ pub enum AppError {
     #[error("Keystore path should have a default value")]
     KeystorePathExpected,
 
+    #[error("Keystore file not found at {0}. Please configure an existing one using the config command or run the keygen command to generate a new one.")]
+    KeystoreNotFound(String),
+
     #[error(
         "Keystore alias not found. Please pass it with the -a flag or configure it using the config command."
     )]

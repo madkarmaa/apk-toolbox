@@ -1,6 +1,6 @@
 # APK toolbox
 
-Compile and decompile Android applications with ease, no need to remember complex commands.
+Compile and decompile Android applications with ease, including split APK formats like `.xapk` and `.apks`, no need to remember complex commands.
 
 ## Downloads
 

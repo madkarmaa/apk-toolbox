@@ -1,6 +1,12 @@
 # APK toolbox
 
-Compile and decompile Android applications with ease, including split APK formats like `.xapk` and `.apks`, no need to remember complex commands.
+Compile and decompile Android applications with ease.
+
+## About
+
+**APK toolbox** is a CLI wrapper around essential Android reverse-engineering and build tools (like Apktool). It streamlines the compilation and decompilation process so you don't have to remember long, complicated commands to do the job yourself. 
+
+It also provides full support for handling split APK formats, such as `.xapk` and `.apks`.
 
 ## Downloads
 

@@ -7,10 +7,9 @@ Use either the `help <cmd>` command or the `--help` (`-h`) flag. The program wil
 ## Requirements
 
 1. Java JDK [> 11](https://apktool.org/docs/build#requirements)
-2. keytool (usually installed along Java)
-3. [Apktool](https://github.com/iBotPeaches/Apktool/releases/latest)
-4. [APKEditor](https://github.com/REAndroid/APKEditor/releases/latest)
-5. Android SDK Build Tools
+2. [Apktool](https://github.com/iBotPeaches/Apktool/releases/latest)
+3. [APKEditor](https://github.com/REAndroid/APKEditor/releases/latest)
+4. Android SDK Build Tools
 
 ### Android SDK Build Tools without Android Studio
 

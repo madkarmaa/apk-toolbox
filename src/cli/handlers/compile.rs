@@ -45,7 +45,10 @@ pub fn compile(
     } else {
         build_tools_dir.join("zipalign")
     };
-    let apksigner_path = build_tools_dir.join("lib").join("apksigner.jar");
+
+    let apksigner_jar_path = build_tools_dir.join("lib").join("apksigner.jar");
+    let apksigner_jar_path_str = apksigner_jar_path.to_string_lossy();
+    let apksigner_exe_override = Some(build_tools_dir.join("apksigner"));
 
     utils::ensure_exists(Path::new(&keystore_path))
         .map_err(|_| errors::AppError::KeystoreNotFound(keystore_path.to_string()))?;
@@ -88,26 +91,31 @@ pub fn compile(
     println!("Aligned APK created at {}", aligned_apk_str);
     println!("Signing APK with apksigner");
 
-    utils::execute_blocking(
-        "java",
-        java_bin_override("java"),
-        &[
-            "-jar",
-            &apksigner_path.to_string_lossy(),
-            "sign",
-            "--ks",
-            &keystore_path,
-            "--ks-key-alias",
-            &keystore_alias,
-            "--ks-pass",
-            &format!("pass:{}", keystore_password),
-            "--key-pass",
-            &format!("pass:{}", keystore_password),
-            "--out",
-            &out_file_str,
-            &aligned_apk_str,
-        ],
-    )?;
+    let keystore_pass_arg = format!("pass:{}", keystore_password);
+    let apksigner_suffix_args = vec![
+        "--ks",
+        &keystore_path,
+        "--ks-key-alias",
+        &keystore_alias,
+        "--ks-pass",
+        &keystore_pass_arg,
+        "--key-pass",
+        &keystore_pass_arg,
+        "--out",
+        &out_file_str,
+        &aligned_apk_str,
+    ];
+
+    if apksigner_jar_path.exists() {
+        let mut args = vec!["-jar", &apksigner_jar_path_str, "sign"];
+        args.extend_from_slice(&apksigner_suffix_args);
+        utils::execute_blocking("java", java_bin_override("java"), &args)?;
+    } else {
+        // apksigner is a shell script in Termux via the 'apksigner' package, invoke directly
+        let mut args = vec!["sign"];
+        args.extend_from_slice(&apksigner_suffix_args);
+        utils::execute_blocking("apksigner", apksigner_exe_override, &args)?;
+    }
 
     println!("Signed APK created at {}", out_file_str);
 

@@ -1,3 +1,4 @@
+use crate::constants::hints;
 use crate::utils;
 use serde_valid::validation;
 use std::path::Path;
@@ -24,8 +25,9 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
         bin_dir.join("java")
     };
 
-    utils::ensure_exists(&java_bin)
-        .map_err(|_| validation::Error::Custom(format!("java executable not found in {}/bin", path)))?;
+    utils::ensure_exists(&java_bin).map_err(|_| {
+        validation::Error::Custom(format!("java executable not found in {}/bin", path))
+    })?;
 
     let keytool_bin = if cfg!(windows) {
         bin_dir.join("keytool.exe")
@@ -33,8 +35,9 @@ pub fn validate_java_home(path: &Option<String>) -> Result<(), validation::Error
         bin_dir.join("keytool")
     };
 
-    utils::ensure_exists(&keytool_bin)
-        .map_err(|_| validation::Error::Custom(format!("keytool executable not found in {}/bin", path)))?;
+    utils::ensure_exists(&keytool_bin).map_err(|_| {
+        validation::Error::Custom(format!("keytool executable not found in {}/bin", path))
+    })?;
 
     Ok(())
 }
@@ -57,18 +60,42 @@ pub fn validate_build_tools_path(path: &Option<String>) -> Result<(), validation
     utils::ensure_exists(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
     utils::ensure_directory(p).map_err(|e| validation::Error::Custom(e.to_string()))?;
 
-    let zipalign_path = if cfg!(windows) {
+    let zipalign = if cfg!(windows) {
         p.join("zipalign.exe")
     } else {
         p.join("zipalign")
     };
 
-    utils::ensure_exists(&zipalign_path)
-        .map_err(|_| validation::Error::Custom(format!("zipalign not found in {}", path)))?;
+    if !zipalign.exists() {
+        let hint = if cfg!(target_os = "android") {
+            hints::TERMUX_INSTALL_ANDROID_SDK_BUILD_TOOLS
+        } else {
+            ""
+        };
 
-    let apksigner_path = p.join("lib").join("apksigner.jar");
-    utils::ensure_exists(&apksigner_path)
-        .map_err(|_| validation::Error::Custom(format!("apksigner.jar not found in {}/lib", path)))?;
+        return Err(validation::Error::Custom(
+            format!("zipalign not found in {}. {}", path, hint)
+                .trim()
+                .to_string(),
+        ));
+    }
+
+    let has_jar = p.join("lib").join("apksigner.jar").exists();
+    let has_exe = p.join("apksigner").exists();
+
+    if !has_jar && !has_exe {
+        let hint = if cfg!(target_os = "android") {
+            hints::TERMUX_INSTALL_ANDROID_SDK_BUILD_TOOLS
+        } else {
+            ""
+        };
+
+        return Err(validation::Error::Custom(
+            format!("apksigner not found in {}. {}", path, hint)
+                .trim()
+                .to_string(),
+        ));
+    }
 
     Ok(())
 }

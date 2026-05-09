@@ -6,31 +6,31 @@ pub enum AppError {
     KeystorePathExpected,
 
     #[error(
-        "Keystore file not found at {0}. Please configure an existing one using the config command or run the keygen command to generate a new one."
+        "Keystore file not found at {0}.\nPlease configure an existing one using the 'config set' command or run the keygen command to generate a new one."
     )]
     KeystoreNotFound(String),
 
     #[error(
-        "Keystore alias not found. Please pass it with the -a flag or configure it using the config command."
+        "Keystore alias not found. Please pass it with the -a flag or configure it using the 'config set' command."
     )]
     KeystoreAliasNotFound,
 
     #[error(
-        "Keystore password not found. Please pass it with the -p flag or configure it using the config command."
+        "Keystore password not found. Please pass it with the -p flag or configure it using the 'config set' command."
     )]
     KeystorePasswordNotFound,
 
-    #[error("Java home not configured. Please configure it using the config command.")]
+    #[error("Java home not configured. Please configure it using the 'config set' command.")]
     JavaHomeNotConfigured,
 
-    #[error("Apktool path not configured. Please configure it using the config command.")]
+    #[error("Apktool path not configured. Please configure it using the 'config set' command.")]
     ApktoolPathNotConfigured,
 
-    #[error("Apkeditor path not configured. Please configure it using the config command.")]
+    #[error("Apkeditor path not configured. Please configure it using the 'config set' command.")]
     ApkeditorPathNotConfigured,
 
     #[error(
-        "Android build tools path not configured. Please configure it using the config command."
+        "Android build tools path not configured. Please configure it using the 'config set' command."
     )]
     BuildToolsPathNotConfigured,
 

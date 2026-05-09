@@ -1,31 +1,10 @@
 pub mod handlers;
+mod parsers;
 
 use crate::config::Config;
 use clap::{Parser, Subcommand};
 use std::fmt::Debug;
 use std::path::PathBuf;
-
-fn trim_string(v: &str) -> Result<String, String> {
-    Ok(v.trim().to_string())
-}
-
-fn validate_keystore_alias(v: &str) -> Result<String, String> {
-    let trimmed = v.trim();
-    if trimmed.is_empty() {
-        Err("Keystore alias cannot be empty".to_string())
-    } else {
-        Ok(trimmed.to_string())
-    }
-}
-
-fn validate_keystore_password(v: &str) -> Result<String, String> {
-    let trimmed = v.trim();
-    if trimmed.len() < 6 {
-        Err("Keystore password must be at least 6 characters".to_string())
-    } else {
-        Ok(trimmed.to_string())
-    }
-}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -62,15 +41,15 @@ pub enum Commands {
         out_file: Option<PathBuf>,
 
         /// The keystore alias to use.
-        #[arg(short = 'a', long, value_parser = validate_keystore_alias)]
+        #[arg(short = 'a', long, value_parser = parsers::validate_keystore_alias)]
         keystore_alias: Option<String>,
 
         /// The password for the keystore.
-        #[arg(short = 'p', long, value_parser = validate_keystore_password)]
+        #[arg(short = 'p', long, value_parser = parsers::validate_keystore_password)]
         keystore_password: Option<String>,
 
-        /// The number of parallel jobs to use for compilation. If not specified, the number of CPU cores will be used.
-        #[arg(short = 'j', long)]
+        /// The number of parallel jobs to use for compilation, between 1 and 8.
+        #[arg(short = 'j', long, value_parser = parsers::validate_apktool_jobs)]
         jobs: Option<usize>,
     },
 
@@ -83,8 +62,8 @@ pub enum Commands {
         /// The output directory for the decompiled smali files. If not specified, a directory with the same name as the APK will be created in the current directory.
         out_dir: Option<PathBuf>,
 
-        /// The number of parallel jobs to use for decompilation. If not specified, the number of CPU cores will be used.
-        #[arg(short = 'j', long)]
+        /// The number of parallel jobs to use for decompilation, between 1 and 8.
+        #[arg(short = 'j', long, value_parser = parsers::validate_apktool_jobs)]
         jobs: Option<usize>,
     },
 
@@ -92,11 +71,11 @@ pub enum Commands {
     #[command(visible_alias = "k")]
     Keygen {
         /// The keystore alias to use.
-        #[arg(short = 'a', long, value_parser = validate_keystore_alias)]
+        #[arg(short = 'a', long, value_parser = parsers::validate_keystore_alias)]
         keystore_alias: Option<String>,
 
         /// The password for the keystore.
-        #[arg(short = 'p', long, value_parser = validate_keystore_password)]
+        #[arg(short = 'p', long, value_parser = parsers::validate_keystore_password)]
         keystore_password: Option<String>,
     },
 
@@ -123,7 +102,7 @@ pub enum ConfigAction {
         key: Config,
 
         /// The value to set for the configuration key.
-        #[arg(value_parser = trim_string)]
+        #[arg(value_parser = parsers::trim_string)]
         value: String,
     },
 
@@ -135,6 +114,6 @@ pub enum ConfigAction {
     },
 
     /// Show where the configuration file is located.
-    #[command(visible_alias = "loc")]
+    #[command(visible_aliases = ["loc", "path", "where", "position", "pos"])]
     Location,
 }

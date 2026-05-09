@@ -22,6 +22,12 @@ It also provides full support for handling split APK formats, such as `.xapk` an
 3. [APKEditor](https://github.com/REAndroid/APKEditor/releases/latest)
 4. Android SDK Build Tools - [no Android Studio?](#android-sdk-build-tools-without-android-studio)
 
+> [!NOTE]
+> On Termux, the Android SDK Build Tools can be installed via
+> ```shell
+> pkg install aapt2 apksigner -y
+> ```
+
 ### Android SDK Build Tools without Android Studio
 
 1. Download the [Android SDK Command Line Tools](https://developer.android.com/studio#command-line-tools-only)
@@ -57,7 +63,7 @@ cd apk-toolbox
 cargo build --release --locked
 ```
 
-> [!NOTE]
+> [!IMPORTANT]
 > To build for Android (`aarch64-linux-android`), you must have [Docker](https://www.docker.com) running. Install and use [`cross`](https://github.com/cross-rs/cross) instead of `cargo`.
 > ```shell
 > cargo install cross --git https://github.com/cross-rs/cross

@@ -5,7 +5,9 @@ pub enum AppError {
     #[error("Keystore path should have a default value")]
     KeystorePathExpected,
 
-    #[error("Keystore file not found at {0}. Please configure an existing one using the config command or run the keygen command to generate a new one.")]
+    #[error(
+        "Keystore file not found at {0}. Please configure an existing one using the config command or run the keygen command to generate a new one."
+    )]
     KeystoreNotFound(String),
 
     #[error(
@@ -27,7 +29,9 @@ pub enum AppError {
     #[error("Apkeditor path not configured. Please configure it using the config command.")]
     ApkeditorPathNotConfigured,
 
-    #[error("Android build tools path not configured. Please configure it using the config command.")]
+    #[error(
+        "Android build tools path not configured. Please configure it using the config command."
+    )]
     BuildToolsPathNotConfigured,
 
     #[error("Path not found at {0}")]
@@ -50,4 +54,7 @@ pub enum AppError {
 
     #[error("Config error: {0}")]
     Config(String),
+
+    #[error("'{0}' not found. Configure it with the config command or add it to PATH.")]
+    ExecutableNotFound(String),
 }

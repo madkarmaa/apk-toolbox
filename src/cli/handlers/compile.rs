@@ -1,4 +1,4 @@
-use crate::cli::handlers::utils::get_java_bin;
+use crate::cli::handlers::utils::java_bin_override;
 use crate::config::Config;
 use crate::constants::errors;
 use crate::utils;
@@ -14,27 +14,32 @@ pub fn compile(
     utils::ensure_exists(&input_dir)?;
     utils::ensure_directory(&input_dir)?;
 
+    let input_dir_str = input_dir.to_string_lossy();
+
     let out_file = out_file.unwrap_or_else(|| {
         utils::current_dir()
             .join(input_dir.file_name().unwrap_or_default())
             .with_extension("apk")
     });
+    let out_file_str = out_file.to_string_lossy();
 
     utils::ensure_has_extension(&out_file, &["apk"])?;
 
-    let jobs = jobs.unwrap_or_else(|| num_cpus::get());
+    let apktool_path = Config::ApktoolPath.get()?;
 
-    let java_path = get_java_bin("java")?;
-
-    let apktool_path = Config::ApktoolPath
-        .get()?
-        .ok_or_else(|| errors::AppError::ApktoolPathNotConfigured)?;
-
-    let build_tools_path = Config::BuildToolsPath
-        .get()?
-        .ok_or_else(|| errors::AppError::BuildToolsPathNotConfigured)?;
-
+    let build_tools_path = Config::BuildToolsPath.get()?;
     let build_tools_dir = Path::new(&build_tools_path);
+
+    let keystore_path = Config::KeystorePath.get()?;
+
+    let keystore_alias = keystore_alias
+        .map(Ok)
+        .unwrap_or_else(|| Config::KeystoreAlias.get())?;
+
+    let keystore_password = keystore_password
+        .map(Ok)
+        .unwrap_or_else(|| Config::KeystorePassword.get())?;
+
     let zipalign_path = if cfg!(windows) {
         build_tools_dir.join("zipalign.exe")
     } else {
@@ -42,68 +47,50 @@ pub fn compile(
     };
     let apksigner_path = build_tools_dir.join("lib").join("apksigner.jar");
 
-    let keystore_path = Config::KeystorePath
-        .get()?
-        .ok_or_else(|| errors::AppError::KeystorePathExpected)?;
-
     utils::ensure_exists(Path::new(&keystore_path))
         .map_err(|_| errors::AppError::KeystoreNotFound(keystore_path.to_string()))?;
 
-    let keystore_alias = keystore_alias
-        .or_else(|| Config::KeystoreAlias.get().unwrap_or_default())
-        .ok_or_else(|| errors::AppError::KeystoreAliasNotFound)?;
-
-    let keystore_password = keystore_password
-        .or_else(|| Config::KeystorePassword.get().unwrap_or_default())
-        .ok_or_else(|| errors::AppError::KeystorePasswordNotFound)?;
-
-    println!(
-        "Compiling {} to {} with {} parallel jobs",
-        input_dir.to_string_lossy(),
-        out_file.to_string_lossy(),
-        jobs
-    );
+    println!("Compiling {} to {}", input_dir_str, out_file_str);
 
     let unsigned_apk = out_file.with_extension("unsigned.apk");
+    let unsigned_apk_str = unsigned_apk.to_string_lossy();
+
     let aligned_apk = out_file.with_extension("aligned.apk");
+    let aligned_apk_str = aligned_apk.to_string_lossy();
 
-    utils::execute_blocking(
-        &java_path.to_string_lossy(),
-        &[
-            "-jar",
-            &apktool_path,
-            "b",
-            "-f",
-            "--jobs",
-            &jobs.to_string(),
-            &input_dir.to_string_lossy(),
-            "-o",
-            &unsigned_apk.to_string_lossy(),
-        ],
-    )?;
+    let mut apktool_args = vec![
+        "-jar",
+        &apktool_path,
+        "b",
+        "-f",
+        "-o",
+        &unsigned_apk_str,
+        &input_dir_str,
+    ];
 
-    println!(
-        "Compiled successfully to {}",
-        unsigned_apk.to_string_lossy()
-    );
+    let jobs_str;
+    if let Some(jobs) = jobs {
+        jobs_str = jobs.to_string();
+        apktool_args.extend_from_slice(&["--jobs", &jobs_str]);
+    }
+
+    utils::execute_blocking("java", java_bin_override("java"), &apktool_args)?;
+
+    println!("Compiled successfully to {}", unsigned_apk_str);
     println!("Aligning APK with zipalign");
 
     utils::execute_blocking(
-        &zipalign_path.to_string_lossy(),
-        &[
-            "-f",
-            "-v",
-            "4",
-            &unsigned_apk.to_string_lossy(),
-            &aligned_apk.to_string_lossy(),
-        ],
+        "zipalign",
+        Some(zipalign_path.clone()),
+        &["-f", "-v", "4", &unsigned_apk_str, &aligned_apk_str],
     )?;
 
-    println!("Aligned APK created at {}", aligned_apk.to_string_lossy());
+    println!("Aligned APK created at {}", aligned_apk_str);
     println!("Signing APK with apksigner");
 
     utils::execute_blocking(
-        &java_path.to_string_lossy(),
+        "java",
+        java_bin_override("java"),
         &[
             "-jar",
             &apksigner_path.to_string_lossy(),
@@ -117,12 +104,12 @@ pub fn compile(
             "--key-pass",
             &format!("pass:{}", keystore_password),
             "--out",
-            &out_file.to_string_lossy(),
-            &aligned_apk.to_string_lossy(),
+            &out_file_str,
+            &aligned_apk_str,
         ],
     )?;
 
-    println!("Signed APK created at {}", out_file.to_string_lossy());
+    println!("Signed APK created at {}", out_file_str);
 
     Ok(())
 }

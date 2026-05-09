@@ -43,13 +43,10 @@ fn main() -> anyhow::Result<()> {
         }
 
         cli::Commands::Config { action } => match action {
-            cli::ConfigAction::Get { key } => match key.get()? {
-                Some(value) => {
-                    println!("{}", value);
-                    Ok(())
-                }
-                None => anyhow::bail!("{} not configured.", key),
-            },
+            cli::ConfigAction::Get { key } => {
+                println!("{}", key.get()?);
+                Ok(())
+            }
 
             cli::ConfigAction::Set { key, value } => {
                 key.set(&value)?;

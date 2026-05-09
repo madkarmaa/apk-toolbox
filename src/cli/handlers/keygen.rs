@@ -1,30 +1,26 @@
-use crate::cli::handlers::utils::get_java_bin;
+use crate::cli::handlers::utils::java_bin_override;
 use crate::config::Config;
-use crate::constants::errors;
 use crate::utils;
 
 pub fn keygen(
     keystore_alias: Option<String>,
     keystore_password: Option<String>,
 ) -> anyhow::Result<()> {
-    let keystore_path = Config::KeystorePath
-        .get()?
-        .ok_or_else(|| errors::AppError::KeystorePathExpected)?;
+    let keystore_path = Config::KeystorePath.get()?;
 
     let keystore_alias = keystore_alias
-        .or_else(|| Config::KeystoreAlias.get().unwrap_or_default())
-        .ok_or_else(|| errors::AppError::KeystoreAliasNotFound)?;
+        .map(Ok)
+        .unwrap_or_else(|| Config::KeystoreAlias.get())?;
 
     let keystore_password = keystore_password
-        .or_else(|| Config::KeystorePassword.get().unwrap_or_default())
-        .ok_or_else(|| errors::AppError::KeystorePasswordNotFound)?;
-
-    let keytool_path = get_java_bin("keytool")?;
+        .map(Ok)
+        .unwrap_or_else(|| Config::KeystorePassword.get())?;
 
     println!("Generating key '{}'", keystore_alias);
 
     utils::execute_blocking(
-        &keytool_path.to_string_lossy(),
+        "keytool",
+        java_bin_override("keytool"),
         &[
             "-genkey",
             "-keystore",

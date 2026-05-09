@@ -1,20 +1,15 @@
-use crate::cli::handlers::utils::get_java_bin;
+use crate::cli::handlers::utils::java_bin_override;
 use crate::config::Config;
-use crate::constants::errors;
 use crate::utils;
 use std::path::PathBuf;
 
 fn merge_apks(input: &PathBuf) -> anyhow::Result<PathBuf> {
-    let java_path = get_java_bin("java")?;
-
-    let apkeditor_path = Config::ApkeditorPath
-        .get()?
-        .ok_or_else(|| errors::AppError::ApkeditorPathNotConfigured)?;
-
+    let apkeditor_path = Config::ApkeditorPath.get()?;
     let output = input.with_extension("merged.apk");
 
     utils::execute_blocking(
-        &java_path.to_string_lossy(),
+        "java",
+        java_bin_override("java"),
         &[
             "-jar",
             &apkeditor_path,
@@ -46,13 +41,7 @@ pub fn decompile(
 
     utils::ensure_directory(&out_dir)?;
 
-    let jobs = jobs.unwrap_or_else(|| num_cpus::get());
-
-    let java_path = get_java_bin("java")?;
-
-    let apktool_path = Config::ApktoolPath
-        .get()?
-        .ok_or_else(|| errors::AppError::ApktoolPathNotConfigured)?;
+    let apktool_path = Config::ApktoolPath.get()?;
 
     let input_extension = input
         .extension()
@@ -71,26 +60,31 @@ pub fn decompile(
         .unwrap_or_default();
 
     println!(
-        "Decompiling {} to {} with {} parallel jobs",
+        "Decompiling {} to {}",
         input_file_name,
-        out_dir.to_string_lossy(),
-        jobs
+        out_dir.to_string_lossy()
     );
 
-    utils::execute_blocking(
-        &java_path.to_string_lossy(),
-        &[
-            "-jar",
-            &apktool_path,
-            "d",
-            "-f",
-            "--jobs",
-            &jobs.to_string(),
-            "-o",
-            &out_dir.to_string_lossy(),
-            &input.to_string_lossy(),
-        ],
-    )?;
+    let out_dir_str = out_dir.to_string_lossy();
+    let input_str = input.to_string_lossy();
+
+    let mut apktool_args = vec![
+        "-jar",
+        &apktool_path,
+        "d",
+        "-f",
+        "-o",
+        &out_dir_str,
+        &input_str,
+    ];
+
+    let jobs_str;
+    if let Some(jobs) = jobs {
+        jobs_str = jobs.to_string();
+        apktool_args.extend_from_slice(&["--jobs", &jobs_str]);
+    }
+
+    utils::execute_blocking("java", java_bin_override("java"), &apktool_args)?;
 
     println!("Decompiled successfully to {}", out_dir.to_string_lossy());
 

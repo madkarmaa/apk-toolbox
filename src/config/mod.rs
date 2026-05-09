@@ -163,20 +163,54 @@ impl Config {
             .map_err(|e| AppError::Config(format_validation_error(&e)))
     }
 
-    pub fn get(&self) -> Result<Option<String>, AppError> {
+    pub fn get(&self) -> Result<String, AppError> {
         let cache = Self::cache()?
             .read()
             .expect("Failed to read from config cache");
 
-        Ok(match self {
-            Config::JavaHome => cache.java.home.clone(),
-            Config::ApktoolPath => cache.apktool.path.clone(),
-            Config::ApkeditorPath => cache.apkeditor.path.clone(),
-            Config::BuildToolsPath => cache.build_tools.path.clone(),
-            Config::KeystorePath => cache.keystore.path.clone(),
-            Config::KeystoreAlias => cache.keystore.alias.clone(),
-            Config::KeystorePassword => cache.keystore.password.clone(),
-        })
+        match self {
+            Config::JavaHome => cache
+                .java
+                .home
+                .clone()
+                .ok_or(AppError::JavaHomeNotConfigured),
+
+            Config::ApktoolPath => cache
+                .apktool
+                .path
+                .clone()
+                .ok_or(AppError::ApktoolPathNotConfigured),
+
+            Config::ApkeditorPath => cache
+                .apkeditor
+                .path
+                .clone()
+                .ok_or(AppError::ApkeditorPathNotConfigured),
+
+            Config::BuildToolsPath => cache
+                .build_tools
+                .path
+                .clone()
+                .ok_or(AppError::BuildToolsPathNotConfigured),
+
+            Config::KeystorePath => cache
+                .keystore
+                .path
+                .clone()
+                .ok_or(AppError::KeystorePathExpected),
+
+            Config::KeystoreAlias => cache
+                .keystore
+                .alias
+                .clone()
+                .ok_or(AppError::KeystoreAliasNotFound),
+
+            Config::KeystorePassword => cache
+                .keystore
+                .password
+                .clone()
+                .ok_or(AppError::KeystorePasswordNotFound),
+        }
     }
 
     pub fn set(&self, value: &str) -> Result<(), AppError> {

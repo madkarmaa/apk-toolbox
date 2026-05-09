@@ -1,5 +1,6 @@
 use crate::constants::errors::AppError;
 use std::env;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -30,22 +31,34 @@ fn cmd_to_string(cmd: &Command) -> String {
         .join(" ")
 }
 
-pub fn execute_blocking(program: &str, args: &[&str]) -> Result<(), AppError> {
-    let mut cmd = Command::new(program);
-    cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
+pub fn execute_blocking(
+    executable: &str,
+    override_path: Option<PathBuf>,
+    args: &[&str],
+) -> Result<(), AppError> {
+    let program = match override_path {
+        Some(path) if path.exists() => path.to_string_lossy().into_owned(),
+        _ => executable.to_string(),
+    };
 
-    let output = cmd.output()?;
-    if !output.status.success() {
-        let mut err = String::from_utf8_lossy(&output.stderr);
-        if err.is_empty() {
-            err = String::from_utf8_lossy(&output.stdout);
+    let mut cmd = Command::new(&program);
+    cmd.args(args)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
+
+    let status = match cmd.status() {
+        Ok(s) => s,
+        Err(e) if e.kind() == io::ErrorKind::NotFound => {
+            return Err(AppError::ExecutableNotFound(executable.to_string()));
         }
+        Err(e) => return Err(AppError::Io(e)),
+    };
 
-        return Err(AppError::ExecutionFailed(format!(
-            "{}\n\n{}",
-            cmd_to_string(&cmd),
-            err.trim()
-        )));
+    if !status.success() {
+        if status.code() == Some(127) || status.code() == Some(9009) {
+            return Err(AppError::ExecutableNotFound(executable.to_string()));
+        }
+        return Err(AppError::ExecutionFailed(cmd_to_string(&cmd)));
     }
 
     Ok(())
